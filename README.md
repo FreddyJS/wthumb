@@ -16,5 +16,5 @@
 ```sh
     arm-linux-gnueabihf-as -mthumb hello-world.s -o hello-world.o
     arm-linux-gnueabihf-ld --thumb-entry=_start hello-world.o -o hello-world.exe
-    qemu-arm hello-world.exe
+    qemu-arm hello-world
 ```
