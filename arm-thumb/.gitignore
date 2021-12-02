@@ -4,5 +4,6 @@
 # Except this file
 !.gitignore
 
-# Except source code files
+# Except source code files and Makefile
 !*.s
+!Makefile
