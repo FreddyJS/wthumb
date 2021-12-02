@@ -5,8 +5,8 @@ Q = qemu-arm
 AS_FLAGS = -mthumb
 LD_FLAGS = --thumb-entry=_start
 
-OBJECTS = hello-world.o hello-world2.o
-EXAMPLES = hello-world hello-world2
+OBJECTS = hello-world.o
+EXAMPLES = hello-world
 
 all: $(EXAMPLES)
 
