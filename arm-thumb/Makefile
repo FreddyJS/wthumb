@@ -5,8 +5,8 @@ Q = qemu-arm
 AS_FLAGS = -mthumb
 LD_FLAGS = --thumb-entry=_start
 
-OBJECTS = hello-world.o
-EXAMPLES = hello-world
+OBJECTS = hello-world.o hello-name.o
+EXAMPLES = hello-world hello-name
 
 all: $(EXAMPLES)
 
@@ -14,10 +14,7 @@ clean:
 	rm -f $(OBJECTS)
 	rm -f $(EXAMPLES)
 
-.s.o:
-	$(AS) $(AS_FLAGS) -o $@  $<
-
-$(EXAMPLES):
+$(EXAMPLES): $(OBJECTS)
 	$(info [AS] $@.s -> $@.o)
 	@$(AS) $(AS_FLAGS) -o $@.o $@.s
 
