@@ -14,10 +14,11 @@ clean:
 	rm -f $(OBJECTS)
 	rm -f $(EXAMPLES)
 
-$(EXAMPLES): $(OBJECTS)
-	$(info [AS] $@.s -> $@.o)
-	@$(AS) $(AS_FLAGS) -o $@.o $@.s
+$(OBJECTS): %.o: %.s
+	$(info [AS] $< -> $@)
+	@$(AS) $(AS_FLAGS) -o $@ $<
 
+$(EXAMPLES): $(OBJECTS)
 	$(info [LD] $@.o -> $@)
 	@$(LD) $(LD_FLAGS) -o $@ $@.o
 
