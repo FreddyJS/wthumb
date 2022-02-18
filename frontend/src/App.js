@@ -27,7 +27,7 @@ function App() {
       <ModeSelector />
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
-        <CodeEditor onChange={() => console.log("Change")}/>
+        <CodeEditor placeHolder="Type your code here..."/>
       </div>
     </div>
   );
