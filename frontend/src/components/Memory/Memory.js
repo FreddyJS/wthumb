@@ -1,8 +1,15 @@
+import { useSelector } from 'react-redux'
 import "./memory.scss";
 
 import Table from 'react-bootstrap/Table';
+import { selectMemory } from "../../reducers/cpuReducer";
 
-const Memory = ({ memory }) => {
+const Memory = () => {
+    const memory = useSelector(selectMemory);
+    if (memory === undefined) {
+        return <div>Loading...</div>
+    }
+
     const tableRows = () => {
         let rows = [];
         for (let i = 0; i < memory.length; i++) {
@@ -23,8 +30,10 @@ const Memory = ({ memory }) => {
             <h3>Memory Layout</h3>
             <Table>
                 <thead>
-                    <th>#</th>
-                    <th>Value</th>
+                    <tr>
+                        <th>#</th>
+                        <th>Value</th>
+                    </tr>
                 </thead>
                 <tbody style={{visibility: "collapse"}}>
                     <tr>

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux'
 
 import logo from './logo.svg';
 import './App.scss';
@@ -13,19 +14,21 @@ import Memory from './components/Memory';
 
 // Emulator
 import initCPU from './emulator/cpu';
+import { runCode, setCpu } from './reducers/cpuReducer';
 
 const cpu = initCPU();
 
 function App() {
   const [code, setCode] = useState('');
-  
-  const runCode = () => {
-    console.log('[emul] Running code...');
-    console.log('[emul] Code:', code);
-    console.log('[emul] CPU:', cpu);
+  const dispatch = useDispatch();
 
-    cpu.run(code);
+  const startEmul = () => {
+    dispatch(runCode(code));
   };
+
+  useEffect(() => {
+    dispatch(setCpu(cpu));
+  }, [dispatch]);
 
   return (
     <div className="App">
@@ -45,10 +48,10 @@ function App() {
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
-        <p>Lines: {code.split("\n").length} <Button variant="outline-primary" onClick={runCode}>Run</Button></p>
+        <p>Lines: {code.split("\n").length} <Button variant="outline-primary" onClick={startEmul}>Run</Button></p>
         <div className='content-code'>
           <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <Memory memory={cpu.memory.data}/>
+          <Memory/>
         </div>
       </div>
     </div>

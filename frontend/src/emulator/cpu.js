@@ -83,17 +83,9 @@ class Cpu {
         this.memory = memory;
     }
 
-    run(code) {
-        // TODO: Implement
-        console.log('[emul] Unimplemented');
-
+    execute(code) {
         const lines = code.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i] === "save") {
-                console.log("[emul] save");
-                this.memory.write32(0x00, 0x12345678);
-            }
-        }
+        this.memory.write(lines.length -1, Math.random() * 255);
     }
 }
 
