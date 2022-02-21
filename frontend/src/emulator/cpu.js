@@ -86,11 +86,19 @@ class Cpu {
     run(code) {
         // TODO: Implement
         console.log('[emul] Unimplemented');
+
+        const lines = code.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i] === "save") {
+                console.log("[emul] save");
+                this.memory.write32(0x00, 0x12345678);
+            }
+        }
     }
 }
 
 function memoryChecks(memory) {
-    const addr = 0x100;
+    const addr = 0x00;
     const value = 0x42;
     memory.write(addr, value);
     if (memory.read(addr) !== value) {
@@ -119,7 +127,7 @@ function memoryChecks(memory) {
 }
 
 function initCPU() {
-    const memory = new Memory(1024);
+    const memory = new Memory(64);
     memoryChecks(memory);
 
     const cpu = new Cpu(memory);

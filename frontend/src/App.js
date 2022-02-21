@@ -9,6 +9,7 @@ import Button from 'react-bootstrap/esm/Button';
 
 // Self defined Components
 import CodeEditor from './components/CodeEditor';
+import Memory from './components/Memory';
 
 // Emulator
 import initCPU from './emulator/cpu';
@@ -45,7 +46,10 @@ function App() {
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
         <p>Lines: {code.split("\n").length} <Button variant="outline-primary" onClick={runCode}>Run</Button></p>
-        <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
+        <div className='content-code'>
+          <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
+          <Memory memory={cpu.memory.data}/>
+        </div>
       </div>
     </div>
   );
