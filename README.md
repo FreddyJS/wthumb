@@ -18,3 +18,7 @@
     arm-linux-gnueabihf-ld --thumb-entry=_start hello-world.o -o hello-world.exe
     qemu-arm hello-world
 ```
+
+**React Libraries**
+* react-bootstrap
+* react-syntax-highlighter
