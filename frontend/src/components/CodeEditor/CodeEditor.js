@@ -1,12 +1,14 @@
 import "./code-editor.scss";
 
 const CodeEditor = ({ placeHolder, onChange, onKeyDown }) => {
+  const updateCode = (event) => {
+    onChange(event.target.value);
+  };
+
   return (
-    <textarea
-      className="editor"
-      placeholder={placeHolder}
-      onChange={onChange}
-    ></textarea>
+    <div className="code-editor">
+      <textarea className="ce-textarea" placeholder={placeHolder} onChange={updateCode} onKeyDown={onKeyDown}/>
+    </div>
   );
 };
 

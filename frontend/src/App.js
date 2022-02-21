@@ -1,14 +1,31 @@
+import { useState } from 'react';
+
 import logo from './logo.svg';
 import './App.scss';
 
 // Bootstrap Components
 import Navbar from 'react-bootstrap/Navbar';
+import Button from 'react-bootstrap/esm/Button';
 
 // Self defined Components
-import ModeSelector from './components/ModeSelector';
 import CodeEditor from './components/CodeEditor';
 
+// Emulator
+import initCPU from './emulator/cpu';
+
+const cpu = initCPU();
+
 function App() {
+  const [code, setCode] = useState('');
+  
+  const runCode = () => {
+    console.log('[emul] Running code...');
+    console.log('[emul] Code:', code);
+    console.log('[emul] CPU:', cpu);
+
+    cpu.run(code);
+  };
+
   return (
     <div className="App">
       <Navbar bg="primary" variant="dark">
@@ -24,10 +41,11 @@ function App() {
         </Navbar.Brand>
       </Navbar>
 
-      <ModeSelector />
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
-        <CodeEditor placeHolder="Type your code here..."/>
+        <p></p>
+        <p>Lines: {code.split("\n").length} <Button variant="outline-primary" onClick={runCode}>Run</Button></p>
+        <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
       </div>
     </div>
   );
