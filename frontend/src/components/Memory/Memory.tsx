@@ -1,17 +1,17 @@
-import { useSelector } from 'react-redux'
 import "./memory.scss";
 
 import Table from 'react-bootstrap/Table';
-import { selectMemory } from "../../reducers/cpuReducer";
+import { selectMemory } from "reducers/cpuReducer";
+import { useAppSelector } from 'hooks';
 
 const Memory = () => {
-    const memory = useSelector(selectMemory);
+    const memory = useAppSelector(selectMemory)
     if (memory === undefined) {
         return <div>Loading...</div>
     }
 
     const tableRows = () => {
-        let rows = [];
+        let rows: JSX.Element[] = []
         for (let i = 0; i < memory.length; i++) {
             rows.push(
                 <tr key={i}>

@@ -1,25 +1,26 @@
 // Create a "reducer" function that determines what the new state
 // should be when something happens in the app
 import { createSlice } from '@reduxjs/toolkit';
+import { RootState } from 'store';
+import { armCPU } from 'hooks';
 
-const initialState = {
-  cpu: undefined, // Needs to be setted by the app
-  memory: [],
+type SliceState  = {
+  cpu: any;
+  status: string;
+};
+
+const initialState: SliceState  = {
+  cpu: armCPU,
   status: 'idle',
 };
 
 export const cpuSlice = createSlice({
   name: 'cpu',
-  initialState,
+  initialState: initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
-    setCpu: (state, action) => {
-        state.cpu = action.payload;
-        state.memory = Array.from(action.payload.memory.data);
-    },
     runCode: (state, action) => {
-        state.cpu.execute(action.payload);
-        state.memory = Array.from(state.cpu.memory.data);
+      state.cpu.execute(action.payload);
     },
   },
   // The `extraReducers` field lets the slice handle actions defined elsewhere,
@@ -28,11 +29,11 @@ export const cpuSlice = createSlice({
   },
 });
 
-export const { setCpu, runCode } = cpuSlice.actions;
+export const { runCode } = cpuSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
 // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
-export const selectMemory = (state) => state.cpu.memory;
+export const selectMemory = (state: RootState) => state.cpu.cpu.memory;
 
 export default cpuSlice.reducer;
