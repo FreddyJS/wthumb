@@ -53,13 +53,9 @@ function App() {
         <div className='content-code'>
           <Program/>
           <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <div style={{width: "100%"}}>
-            <div style={{height: "50%"}}>
-              <Registers/>
-            </div>
-            <div style={{height: "50%"}}>
-              <Memory/>
-            </div>
+          <div style={{display: "flex", flexDirection: "column"}}>
+            <Registers/>
+            <Memory/>
           </div>
         </div>
       </div>
