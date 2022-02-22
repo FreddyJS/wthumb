@@ -1,11 +1,22 @@
 .memory {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
+    border: 1px dotted #000;
+}
+
+.memory-header {
+    height: fit-content;
+
+    table {
+        margin-bottom: 0rem;
+    }
 }
 
 .memory-container {
+    flex: 1;
     overflow: auto;
-    height: 90%;
 }
 
 .memory-table {

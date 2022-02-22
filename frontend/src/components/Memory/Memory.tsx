@@ -27,21 +27,23 @@ const Memory = () => {
 
     return (
         <div className="memory">
-            <h3>Memory Layout</h3>
-            <Table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody style={{visibility: "collapse"}}>
-                    <tr>
-                        <td>0x00</td>
-                        <td>0x00</td>
-                    </tr>
-                </tbody>
-            </Table>
+            <div className="memory-header">
+                <h3>Memory Layout</h3>
+                <Table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody style={{visibility: "collapse"}}>
+                        <tr>
+                            <td>0x00</td>
+                            <td>0x00</td>
+                        </tr>
+                    </tbody>
+                </Table>
+            </div>
             <div className="memory-container">
                 <Table>
                     <tbody>

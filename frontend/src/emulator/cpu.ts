@@ -23,7 +23,7 @@ export function createARMCPU(): CPU_T {
         execute_op: function(op: any) {
             switch (op.name) {
                 case 'str':
-                    this.write(op.operands[0].value, op.operands[1].value);
+                    this.write(op.operands[1].value, op.operands[0].value);
                     break;
                 default:
                     console.log(op);
