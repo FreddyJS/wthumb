@@ -13,7 +13,7 @@ const Registers = () => {
     let row: JSX.Element[] = [];
     for (let i = first; i < last; i++) {
       row.push(
-        <Button variant="outline-primary" className="registers-item">
+        <Button key={i} variant="outline-primary" className="registers-item">
           <div className="registers-item-name">R{i}</div>
           <div>
             <Badge bg="primary" className="registers-item-value">0x{regs[i].toString(16).padStart(8, '0')}</Badge>

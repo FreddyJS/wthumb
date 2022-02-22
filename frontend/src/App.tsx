@@ -43,17 +43,18 @@ function App() {
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
-        <p>Lines of code: {code.split("\n").length}
+        <div>Lines of code: {code.split("\n").length}
           <div>
             <Button variant="outline-primary" onClick={startEmul}>Run</Button>
             <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
             <Button variant="outline-primary">Clear Memory</Button>
           </div>
-        </p>
+          <p></p>
+        </div>
         <div className='content-code'>
           <Program/>
           <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <div style={{display: "flex", flexDirection: "column"}}>
+          <div>
             <Registers/>
             <Memory/>
           </div>
