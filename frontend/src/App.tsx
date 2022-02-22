@@ -9,11 +9,13 @@ import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/esm/Button';
 
 // Self defined Components
-import CodeEditor from './components/CodeEditor';
 import Memory from './components/Memory';
+import Program from 'components/Program';
+import Registers from 'components/Registers';
+import CodeEditor from './components/CodeEditor';
 
 // Emulator
-import { runCode } from './reducers/cpuReducer';
+import { runCode, updateProgram } from './reducers/cpuReducer';
 
 function App() {
   const [code, setCode] = useState('');
@@ -41,13 +43,24 @@ function App() {
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
-        <p>Lines: {code.split("\n").length}
-          <Button variant="outline-primary" onClick={startEmul}>Run</Button>
-          <Button variant="outline-primary">Clear Memory</Button>
+        <p>Lines of code: {code.split("\n").length}
+          <div>
+            <Button variant="outline-primary" onClick={startEmul}>Run</Button>
+            <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
+            <Button variant="outline-primary">Clear Memory</Button>
+          </div>
         </p>
         <div className='content-code'>
+          <Program/>
           <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <Memory/>
+          <div style={{width: "100%"}}>
+            <div style={{height: "50%"}}>
+              <Registers/>
+            </div>
+            <div style={{height: "50%"}}>
+              <Memory/>
+            </div>
+          </div>
         </div>
       </div>
     </div>

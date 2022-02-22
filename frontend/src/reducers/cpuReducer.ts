@@ -19,7 +19,11 @@ export const cpuSlice = createSlice({
   initialState: initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    updateProgram: (state, action) => {
+      state.cpu.program = action.payload.split('\n').filter((line: string) => line !== '');
+    },
     runCode: (state, action) => {
+      state.cpu.program = action.payload.split('\n').filter((line: string) => line !== '');
       state.cpu.execute(action.payload);
     },
   },
@@ -29,11 +33,12 @@ export const cpuSlice = createSlice({
   },
 });
 
-export const { runCode } = cpuSlice.actions;
+export const { updateProgram, runCode } = cpuSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
 // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
 export const selectMemory = (state: RootState) => state.cpu.cpu.memory;
+export const selectProgram = (state: RootState) => state.cpu.cpu.program;
 
 export default cpuSlice.reducer;
