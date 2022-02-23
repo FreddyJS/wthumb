@@ -54,7 +54,7 @@ function App() {
         <div className='content-code'>
           <Program/>
           <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <div>
+          <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
             <Registers/>
             <Memory/>
           </div>

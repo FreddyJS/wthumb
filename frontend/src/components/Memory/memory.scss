@@ -1,4 +1,7 @@
 .memory {
+    display: flex;
+    flex-direction: column;
+    height: 50%;
     background-color: #f5f5f5;
     border: 1px dotted #000;
 }
@@ -8,6 +11,8 @@
 }
 
 .memory-container {
+    min-width: fit-content;
+    white-space: nowrap;
     overflow: auto;
 
     thead {
