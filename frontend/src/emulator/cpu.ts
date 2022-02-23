@@ -1,4 +1,5 @@
-import { Instruction, lines_to_ops } from './parser';
+import { Instruction, lines_to_ops, OperandType } from './parser';
+import CPU_CONFIG from './armthumb';
 
 type CPU_T = {
     regs: number[],
@@ -13,8 +14,8 @@ type CPU_T = {
 
 export function createARMCPU(): CPU_T {
     let cpu: CPU_T = {
-        regs: [0, 1, 2, 3, 4, 5, 6, 7],
-        memory: new Array<number>(16).fill(0),
+        regs: new Array<number>(CPU_CONFIG.total_registers).fill(0).map((_, i) => i),
+        memory: new Array<number>(CPU_CONFIG.memory_size).fill(0),
         program: new Array<string>(16).fill(''),
         execute: function(code: string) {
             const ops = lines_to_ops(code);
@@ -25,15 +26,18 @@ export function createARMCPU(): CPU_T {
         execute_op: function(op: Instruction) {
             switch (op.operation) {
                 case 'str':
-                    // TODO: the operands are register not numbers, for now lets use just numbers
-                    if (op.operands[0].value.startsWith('r')) {
-                        const reg_idx = parseInt(op.operands[0].value.slice(1));
-                        const reg_value = this.regs[reg_idx];
-                        this.write(parseInt(op.operands[1].value), reg_value);
-                    } else {
-                        this.write(parseInt(op.operands[1].value), parseInt(op.operands[0].value));
-                    }
-                    break;
+                    {
+                        const addr = op.operands[1].type === OperandType.Inmediate ?  parseInt(op.operands[1].value.replace("#0x", "")) : this.regs[parseInt(op.operands[1].value.slice(1))];
+                        const value = this.regs[parseInt(op.operands[0].value.slice(1))];
+                        this.write(addr, value);
+                    } break;
+                case 'mov':
+                    {
+                        const reg = parseInt(op.operands[0].value.slice(1));
+                        const value = op.operands[1].type === OperandType.Inmediate ?  parseInt(op.operands[1].value.replace("#0x", ""), 16) : this.regs[parseInt(op.operands[1].value.slice(1))];
+                        this.regs[reg] = value;
+                    } break;
+                    
                 default:
                     console.log(op);
             }
