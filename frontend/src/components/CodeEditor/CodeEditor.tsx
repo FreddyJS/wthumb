@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import "./code-editor.scss";
 
 import CodeMirror from '@uiw/react-codemirror';
@@ -29,7 +30,9 @@ type CodeEditorProps = {
 }
 
 const CodeEditor = ({ placeHolder, onChange }: CodeEditorProps) => {
-  onChange(codeExample);
+  useEffect(() => {
+    onChange(codeExample);
+  }, [onChange]);
 
   return (
     <div className="code-editor">
