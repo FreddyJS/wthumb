@@ -2,9 +2,14 @@ import "./code-editor.scss";
 
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/stream-parser';
-import { gas } from '@codemirror/legacy-modes/mode/gas'
 
-const armCode = `
+// Custom code mirror mode only for arm thumb
+import armThumb from './cm-armthumb';
+
+const codeExample = 
+`; This a simple example in arm thumb!
+
+; .text ; Not supported by the compiler yet
   add r0, #2    ; r0 = 2
   add r0, #0xf  ; r0 = 17
   add r1, r0    ; r1 = 17
@@ -23,31 +28,24 @@ type CodeEditorProps = {
   onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-const CodeEditor = ({ placeHolder, onChange, onKeyDown }: CodeEditorProps) => {
-  const onChangeHandler = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(event.target.value);
-  };
+const CodeEditor = ({ placeHolder, onChange }: CodeEditorProps) => {
+  onChange(codeExample);
 
-  const onKeyDownHandler = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Insert 2 spaces when pressing tab
-    if (event.key === "Tab") {
-      event.preventDefault();
-      console.log("Tab pressed");
-    }
-
-    if (onKeyDown) {
-      onKeyDown(event);
-    }
-  };
   return (
     <div className="code-editor">
       <CodeMirror
-        value={armCode}
-        extensions={[StreamLanguage.define(gas)]}
+        placeholder={placeHolder}
+        value={codeExample}
+        theme='light'
+        style={{
+          textAlign: "left",
+          height: "100%",
+          overflow: "auto"
+        }}
+        extensions={[StreamLanguage.define(armThumb)]}
         onChange={(value, viewUpdate) => {
           onChange(value);
         }}
-        height="100%"
       />
       {/* <textarea id="ce-textarea" className="ce-textarea" placeholder={placeHolder} onChange={onChangeHandler} onKeyDown={onKeyDownHandler}/> */}
     </div>
