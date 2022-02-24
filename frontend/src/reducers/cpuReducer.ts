@@ -3,14 +3,17 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { RootState } from 'store';
 import { armCPU } from 'hooks';
+import { armCPU_T, compile_assembly } from 'emulator';
 
 type SliceState  = {
-  cpu: any;
+  cpu: armCPU_T;
+  assembly: string[];
   status: string;
 };
 
 const initialState: SliceState  = {
   cpu: armCPU,
+  assembly: [],
   status: 'idle',
 };
 
@@ -20,11 +23,16 @@ export const cpuSlice = createSlice({
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
     updateProgram: (state, action) => {
-      state.cpu.program = action.payload.split('\n').filter((line: string) => line !== '');
+      state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';');
+      state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
     },
     runCode: (state, action) => {
-      state.cpu.program = action.payload.split('\n').filter((line: string) => line !== '');
-      state.cpu.execute(action.payload);
+      const program = compile_assembly(action.payload);
+      state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';');
+      state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
+      state.cpu.reset();
+      state.cpu.load(program.ins);
+      state.cpu.run();
     },
   },
   // The `extraReducers` field lets the slice handle actions defined elsewhere,
@@ -40,5 +48,6 @@ export const { updateProgram, runCode } = cpuSlice.actions;
 // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
 export const selectMemory = (state: RootState) => state.cpu.cpu.memory;
 export const selectProgram = (state: RootState) => state.cpu.cpu.program;
+export const selectAssembly = (state: RootState) => state.cpu.assembly;
 
 export default cpuSlice.reducer;

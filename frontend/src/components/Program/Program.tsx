@@ -1,12 +1,12 @@
 import "./program.scss";
 
 import { useAppSelector } from "hooks";
-import { selectProgram } from "reducers/cpuReducer";
+import { selectAssembly } from "reducers/cpuReducer";
 
 import { Table } from "react-bootstrap";
 
 const Program = () => {
-  const program = useAppSelector(selectProgram)
+  const program = useAppSelector(selectAssembly)
 
   return (
     <div className="program">

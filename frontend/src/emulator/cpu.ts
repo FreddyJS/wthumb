@@ -1,75 +1,107 @@
-import { Instruction, lines_to_ops, OperandType } from './parser';
-import CPU_CONFIG from './armthumb';
+import compile_assembly, { Instruction, OperandType, Operation, assert } from "./compiler";
 
-type CPU_T = {
-    regs: number[],
-    memory: Array<number>,
-    program: Array<string>,
-    execute: (code: string) => void,
-    execute_op: (op: any) => void,
-    read: (addr: number) => number,
-    write: (addr: number, value: number) => void,
-    reset: () => void,
+const defaultMemorySize = 64;
+const defaultStackSize = 64;
+const defaultRegs = {
+  // General purpose registers
+  "r0": 0x00, "r1": 0x00, "r2": 0x00, "r3": 0x00, "r4": 0x00, "r5": 0x00, "r6": 0x00, "r7": 0x00,
+  "r8": 0x00, "r9": 0x00, "r10": 0x00, "r11": 0x00, "r12": 0x00, "r13": 0x00, "r14": 0x00, "r15": 0x00
 }
 
-export function createARMCPU(): CPU_T {
-    let cpu: CPU_T = {
-        regs: new Array<number>(CPU_CONFIG.total_registers).fill(0).map((_, i) => i),
-        memory: new Array<number>(CPU_CONFIG.memory_size).fill(0),
-        program: new Array<string>(16).fill(''),
-        execute: function(code: string) {
-            const ops = lines_to_ops(code);
-            for (const op of ops) {
-                this.execute_op(op);
-            }
-        },
-        execute_op: function(op: Instruction) {
-            switch (op.operation) {
-                case 'str':
-                    {
-                        const addr = op.operands[1].type === OperandType.Inmediate ?  parseInt(op.operands[1].value.replace("#0x", "")) : this.regs[parseInt(op.operands[1].value.slice(1))];
-                        const value = this.regs[parseInt(op.operands[0].value.slice(1))];
-                        this.write(addr, value);
-                    } break;
-                case 'mov':
-                    {
-                        const reg = parseInt(op.operands[0].value.slice(1));
-                        const value = op.operands[1].type === OperandType.Inmediate ?  parseInt(op.operands[1].value.replace("#0x", ""), 16) : this.regs[parseInt(op.operands[1].value.slice(1))];
-                        this.regs[reg] = value;
-                    } break;
-                    
-                default:
-                    console.log(op);
-            }
-        },
-        read: function(addr: number) {
-            return this.memory[addr];
-        },
-        write: function(addr: number, value: number) {
-            this.memory[addr] = value;
-        },
-        reset: function() {
-            this.regs = [];
-            this.memory = new Array<number>(64);
-        }
-    }
+type armCPU_T = {
+  regs: { [key: string]: number; },
+  memory: number[],
+  stack: number[],
+  program: Instruction[],
+  pc: number,
+  sp: number,
 
-    return cpu;
+  // Methods
+  run: () => void,
+  step: () => void,
+  reset: () => void,
+  load: (program: Instruction[]) => void,
+  load_assembly: (assembly: string) => void,
+  execute: (ins: Instruction) => void,
 }
 
-function memoryChecks(cpu: any) {
-    const addr = 0x00;
-    const value = 0x42;
-    cpu.write(addr, value);
-    if (cpu.read(addr) !== value) {
-        throw new Error('[emul] ]Memory read/write failed');
-    } else {
-        console.log('[emul] Memory read/write succeeded');
-    }
+function defaultCPU(): armCPU_T { 
+  let armCPU: armCPU_T = {
+    regs: {...defaultRegs},
+    memory: new Array(defaultMemorySize).fill(0),
+    stack: new Array(defaultStackSize).fill(0),
+    program: [],
+    pc: 0,
+    sp: 0,
 
-    cpu.reset();
+    // Methods
+    run: function() {
+      for (let i = 0; i < this.program.length; i++) {
+        this.execute(this.program[i]);
+      }
+    },
+    step: function() {
+      this.execute(this.program[this.pc]);
+      this.pc++;
+    },
+    reset: function() {
+      console.log("[cpu] Resetting CPU...");
+      this.regs = {...defaultRegs};
+      this.memory = new Array(defaultMemorySize).fill(0);
+      this.stack = new Array(defaultStackSize).fill(0);
+      this.program = [];
+      this.pc = 0;
+      this.sp = 0;
+      console.log("[cpu] CPU reset!");
+    },
+    load: function(program: Instruction[]) {
+      this.program = program;
+    },
+    load_assembly: function(assembly: string) {
+      const compiled = compile_assembly(assembly);
+      if (compiled.error) {
+        throw new Error(compiled.error.message);
+      }
+      this.program = compiled.ins;
+    },
+    execute: function(ins: Instruction) {
+      assert(Operation.TOTAL_OPERATIONS === 2, "Exhaustive handling of operations in execute");
+      switch (ins.operation) {
+        case Operation.MOV: {
+          const [op1, op2] = ins.operands;
+          // op1 is always a register and op2 can be a register or inmediate
+          if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
+            this.regs[op1.value] = this.regs[op2.value];
+          } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
+            const value = parseInt(op2.value.slice(1));
+            this.regs[op1.value] = value;
+          } else {
+            throw new Error("Invalid operand type for MOV. This should never happen.");
+          }
+        } break;
+
+        case Operation.ADD: {
+          // TODO: Add support for other types of registers (pc, sp)
+          const [op1, op2] = ins.operands;
+
+          if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
+            this.regs[op1.value] += this.regs[op2.value];
+          } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
+            const value = parseInt(op2.value.slice(1));
+            this.regs[op1.value] += value;
+          } else {
+            throw new Error("Invalid operand type for ADD. This should never happen.");
+          }
+        } break;
+
+        default:
+          throw new Error("Invalid operation in execute. This should never happen.");
+      }
+    },
+  };
+
+  return armCPU;
 }
 
-const ARMCPU = createARMCPU();
-export default ARMCPU;
-export { memoryChecks };
+export default defaultCPU;
+export type { armCPU_T };
