@@ -1,16 +1,15 @@
-import { useEffect } from "react";
 import "./code-editor.scss";
 
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/stream-parser';
 
 // Custom code mirror mode only for arm thumb
-import armThumb from './cm-armthumb';
+import gasArmThumb from './cm-armthumb';
 
 const codeExample = 
 `; This a simple example in arm thumb!
 
-; .text ; Not supported by the compiler yet
+.text ; Start of .text section. This is where the code will be placed.
   add r0, #2    ; r0 = 2
   add r0, #0xf  ; r0 = 17
   add r1, r0    ; r1 = 17
@@ -30,10 +29,6 @@ type CodeEditorProps = {
 }
 
 const CodeEditor = ({ placeHolder, onChange }: CodeEditorProps) => {
-  useEffect(() => {
-    onChange(codeExample);
-  }, [onChange]);
-
   return (
     <div className="code-editor">
       <CodeMirror
@@ -45,7 +40,7 @@ const CodeEditor = ({ placeHolder, onChange }: CodeEditorProps) => {
           height: "100%",
           overflow: "auto"
         }}
-        extensions={[StreamLanguage.define(armThumb)]}
+        extensions={[StreamLanguage.define(gasArmThumb)]}
         onChange={(value, viewUpdate) => {
           onChange(value);
         }}

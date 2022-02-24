@@ -35,32 +35,29 @@ function mkArmThumb() {
   // http://infocenter.arm.com/help/topic/com.arm.doc.qrc0001l/QRC0001_UAL.pdf
   // http://infocenter.arm.com/help/topic/com.arm.doc.ddi0301h/DDI0301H_arm1176jzfs_r0p7_trm.pdf
 
-  registers.r0  = "variableName.special";
-  registers.r1  = "variableName.special";
-  registers.r2  = "variableName.special";
-  registers.r3  = "variableName.special";
-  registers.r4  = "variableName.special";
-  registers.r5  = "variableName.special";
-  registers.r6  = "variableName.special";
-  registers.r7  = "variableName.special";
-  registers.r8  = "variableName.special";
-  registers.r9  = "variableName.special";
-  registers.r10 = "variableName.special";
-  registers.r11 = "variableName.special";
-  registers.r12 = "variableName.special";
+  registers.r0  = "atom";
+  registers.r1  = "atom";
+  registers.r2  = "atom";
+  registers.r3  = "atom";
+  registers.r4  = "atom";
+  registers.r5  = "atom";
+  registers.r6  = "atom";
+  registers.r7  = "atom";
+  registers.r8  = "atom";
+  registers.r9  = "atom";
+  registers.r10 = "atom";
+  registers.r11 = "atom";
+  registers.r12 = "atom";
 
-  registers.sp  = "variableName.special";
-  registers.lr  = "variableName.special";
-  registers.pc  = "variableName.special";
+  registers.sp  = "atom";
+  registers.lr  = "atom";
+  registers.pc  = "atom";
   registers.r13 = registers.sp;
   registers.r14 = registers.lr;
   registers.r15 = registers.pc;
 
   custom.push(function(ch: any, stream: any) {
-    if (ch === '#') {
-      stream.eatWhile(/\w/);
-      return "number";
-    }
+    return null;
   });
 
   function nextUntilUnescaped(stream: any, end: any) {
@@ -72,18 +69,6 @@ function mkArmThumb() {
       escaped = !escaped && next === "\\";
     }
     return escaped;
-  }
-
-  function clikeComment(stream: any, state: any) {
-    var maybeEnd = false, ch;
-    while ((ch = stream.next()) != null) {
-      if (ch === "/" && maybeEnd) {
-        state.tokenize = null;
-        break;
-      }
-      maybeEnd = (ch === "*");
-    }
-    return "comment";
   }
 
   return {
@@ -103,46 +88,35 @@ function mkArmThumb() {
       }
 
       var style, cur, ch = stream.next();
-
-      if (ch === "/") {
-        if (stream.eat("*")) {
-          state.tokenize = clikeComment;
-          return clikeComment(stream, state);
-        }
-      }
-
+      
+      // Single line comment
       if (ch === lineCommentStartSymbol) {
         stream.skipToEnd();
         return "comment";
       }
 
+      // String literal
       if (ch === '"') {
         nextUntilUnescaped(stream, '"');
         return "string";
       }
 
+      // .directive words
       if (ch === '.') {
         stream.eatWhile(/\w/);
         cur = stream.current().toLowerCase();
-        style = directives[cur];
-        return style || null;
+        return directives[cur];
       }
 
-      if (ch === '=') {
+      // Separator ,
+      if (ch === ',') {
         stream.eatWhile(/\w/);
-        return "tag";
+        return "contentSeparator";
       }
 
-      if (ch === '{') {
-        return "bracket";
-      }
-
-      if (ch === '}') {
-        return "bracket";
-      }
-
-      if (/\d/.test(ch)) {
-        if (ch === "0" && stream.eat("x")) {
+      // Hexadecimal and decimal numbers. #0xff | #255
+      if (ch === "#") {
+        if (stream.eat("0") && stream.eat("x")) {
           stream.eatWhile(/[0-9a-fA-F]/);
           return "number";
         }
@@ -150,6 +124,18 @@ function mkArmThumb() {
         return "number";
       }
 
+      // CPU Registers
+      if (ch === 'r') {
+        stream.eatWhile(/[0-9]/);
+        cur = stream.current().toLowerCase();
+        if (registers[cur]) {
+          return registers[cur];
+        } else {
+          return "invalid";
+        }
+      }
+
+      // Words. Tags (labels) and keywords (instructions).
       if (/\w/.test(ch)) {
         stream.eatWhile(/\w/);
         cur = stream.current().toLowerCase();
@@ -158,11 +144,11 @@ function mkArmThumb() {
         } else if (keywords[cur]) {
           return 'keyword';
         }
-        cur = stream.current().toLowerCase();
-        style = registers[cur];
-        return style || null;
+
+        return null;
       }
 
+      // Execute custom parsing function if it exists
       for (var i = 0; i < custom.length; i++) {
         style = custom[i](ch, stream, state);
         if (style) {
@@ -174,12 +160,13 @@ function mkArmThumb() {
     languageData: {
       commentTokens: {
         line: lineCommentStartSymbol,
-        block: {open: "/*", close: "*/"}
+        // TODO: search if gas syntax supports multiline comments
+        // block: {open: "/*", close: "*/"}
       }
     }
   };
 }
 
-const armThumb = mkArmThumb();
+const gasArmThumb = mkArmThumb();
 
-export default armThumb;
+export default gasArmThumb;
