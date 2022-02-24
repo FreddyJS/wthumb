@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppDispatch } from './hooks';
+import { useAppDispatch, useAppSelector } from './hooks';
 
 import './App.scss';
 import logo from './logo.svg';
@@ -19,6 +19,7 @@ import { runCode, updateProgram } from './reducers/cpuReducer';
 
 function App() {
   const [code, setCode] = useState('');
+  const error = useAppSelector((state) => state.cpu.error);
   const dispatch = useAppDispatch();
 
   const startEmul = () => {
@@ -49,7 +50,7 @@ function App() {
             <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
             <Button variant="outline-primary">Clear Memory</Button>
           </div>
-          <p></p>
+          <p>{error !== undefined ? error : ''}</p>
         </div>
         <div className='content-code'>
           <Program/>

@@ -8,13 +8,13 @@ import { armCPU_T, compile_assembly } from 'emulator';
 type SliceState  = {
   cpu: armCPU_T;
   assembly: string[];
-  status: string;
+  error?: string;
 };
 
 const initialState: SliceState  = {
   cpu: armCPU,
   assembly: [],
-  status: 'idle',
+  error: undefined,
 };
 
 export const cpuSlice = createSlice({
@@ -23,16 +23,27 @@ export const cpuSlice = createSlice({
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
     updateProgram: (state, action) => {
-      state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';');
-      state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
+      const program = compile_assembly(action.payload);
+      if (program.error) {
+        state.error = program.error.message;
+      } else {
+        state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';' && !line.trim().startsWith('.'));
+        state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
+        state.error = undefined;
+      }
     },
     runCode: (state, action) => {
       const program = compile_assembly(action.payload);
-      state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';');
-      state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
-      state.cpu.reset();
-      state.cpu.load(program.ins);
-      state.cpu.run();
+      if (program.error) {
+        state.error = program.error.message;
+      } else {
+        state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';' && !line.trim().startsWith('.'));
+        state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
+        state.cpu.reset();
+        state.cpu.load(program.ins);
+        state.cpu.run();
+        state.error = undefined;
+      }
     },
   },
   // The `extraReducers` field lets the slice handle actions defined elsewhere,
