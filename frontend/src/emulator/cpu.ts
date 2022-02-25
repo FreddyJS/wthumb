@@ -1,62 +1,125 @@
-import { lines_to_ops } from './parser';
+import compile_assembly, { Instruction, OperandType, Operation, assert } from './compiler';
 
-type CPU_T = {
-    regs: number[],
-    memory: Array<number>,
-    execute: (code: string) => void,
-    execute_op: (op: any) => void,
-    read: (addr: number) => number,
-    write: (addr: number, value: number) => void,
-    reset: () => void,
-}
+const defaultMemorySize = 64;
+const defaultStackSize = 64;
+const defaultRegs = {
+  // General purpose registers
+  r0: 0x00,
+  r1: 0x00,
+  r2: 0x00,
+  r3: 0x00,
+  r4: 0x00,
+  r5: 0x00,
+  r6: 0x00,
+  r7: 0x00,
+  r8: 0x00,
+  r9: 0x00,
+  r10: 0x00,
+  r11: 0x00,
+  r12: 0x00,
+  r13: 0x00,
+  r14: 0x00,
+  r15: 0x00,
+};
 
-export function createARMCPU(): CPU_T {
-    let cpu: CPU_T = {
-        regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        memory: new Array<number>(64).fill(0),
-        execute: function(code: string) {
-            const ops = lines_to_ops(code.split('\n'));
-            for (const op of ops) {
-                this.execute_op(op);
+type armCPU_T = {
+  regs: { [key: string]: number };
+  memory: number[];
+  stack: number[];
+  program: Instruction[];
+  pc: number;
+  sp: number;
+
+  // Methods
+  run: () => void;
+  step: () => void;
+  reset: () => void;
+  load: (program: Instruction[]) => void;
+  load_assembly: (assembly: string) => void;
+  execute: (ins: Instruction) => void;
+};
+
+function defaultCPU(): armCPU_T {
+  const armCPU: armCPU_T = {
+    regs: { ...defaultRegs },
+    memory: new Array(defaultMemorySize).fill(0),
+    stack: new Array(defaultStackSize).fill(0),
+    program: [],
+    pc: 0,
+    sp: 0,
+
+    // Methods
+    run() {
+      for (const ins of this.program) {
+        this.execute(ins);
+      }
+    },
+    step() {
+      this.execute(this.program[this.pc]);
+      this.pc++;
+    },
+    reset() {
+      this.regs = { ...defaultRegs };
+      this.memory = new Array(defaultMemorySize).fill(0);
+      this.stack = new Array(defaultStackSize).fill(0);
+      this.program = [];
+      this.pc = 0;
+      this.sp = 0;
+    },
+    load(program: Instruction[]) {
+      this.program = program;
+    },
+    load_assembly(assembly: string) {
+      const compiled = compile_assembly(assembly);
+      if (compiled.error) {
+        throw new Error(compiled.error.message);
+      }
+      this.program = compiled.ins;
+    },
+    execute(ins: Instruction) {
+      assert(Operation.TOTAL_OPERATIONS === 2, 'Exhaustive handling of operations in execute');
+      switch (ins.operation) {
+        case Operation.MOV:
+          {
+            const [op1, op2] = ins.operands;
+            // op1 is always a register and op2 can be a register or inmediate
+            if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
+              this.regs[op1.value] = this.regs[op2.value];
+            } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
+              const radix = op2.type === OperandType.HexInmediate ? 16 : 10;
+              const value = parseInt(op2.value.slice(1), radix);
+              this.regs[op1.value] = value;
+            } else {
+              throw new Error('Invalid operand type for MOV. This should never happen.');
             }
-        },
-        execute_op: function(op: any) {
-            switch (op.name) {
-                case 'str':
-                    this.write(op.operands[0].value, op.operands[1].value);
-                    break;
-                default:
-                    console.log(op);
+          }
+          break;
+
+        case Operation.ADD:
+          {
+            // TODO: Add support for other types of registers (pc, sp)
+            const [op1, op2] = ins.operands;
+
+            if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
+              this.regs[op1.value] += this.regs[op2.value];
+            } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
+              const radix = op2.type === OperandType.HexInmediate ? 16 : 10;
+              const value = parseInt(op2.value.slice(1), radix);
+              this.regs[op1.value] += value;
+            } else {
+              throw new Error('Invalid operand type for ADD. This should never happen.');
             }
-        },
-        read: function(addr: number) {
-            return this.memory[addr];
-        },
-        write: function(addr: number, value: number) {
-            this.memory[addr] = value;
-        },
-        reset: function() {
-            this.regs = [];
-            this.memory = new Array<number>(64);
-        }
-    }
+          }
+          break;
 
-    return cpu;
+        default:
+          throw new Error('Invalid operation in execute. This should never happen.');
+      }
+    },
+  };
+
+  return armCPU;
 }
 
-function memoryChecks(cpu: any) {
-    const addr = 0x00;
-    const value = 0x42;
-    cpu.write(addr, value);
-    if (cpu.read(addr) !== value) {
-        throw new Error('[emul] ]Memory read/write failed');
-    } else {
-        console.log('[emul] Memory read/write succeeded');
-    }
-
-    cpu.reset();
-}
-
-const ARMCPU = createARMCPU();
-export default ARMCPU;
-export { memoryChecks };
+export default defaultCPU;
+export type { armCPU_T };

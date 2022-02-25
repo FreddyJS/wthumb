@@ -3,15 +3,18 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { RootState } from 'store';
 import { armCPU } from 'hooks';
+import { armCPU_T, compile_assembly } from 'emulator';
 
 type SliceState  = {
-  cpu: any;
-  status: string;
+  cpu: armCPU_T;
+  assembly: string[];
+  error?: string;
 };
 
 const initialState: SliceState  = {
   cpu: armCPU,
-  status: 'idle',
+  assembly: [],
+  error: undefined,
 };
 
 export const cpuSlice = createSlice({
@@ -19,8 +22,28 @@ export const cpuSlice = createSlice({
   initialState: initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    updateProgram: (state, action) => {
+      const program = compile_assembly(action.payload);
+      if (program.error) {
+        state.error = program.error.message;
+      } else {
+        state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';' && !line.trim().startsWith('.'));
+        state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
+        state.error = undefined;
+      }
+    },
     runCode: (state, action) => {
-      state.cpu.execute(action.payload);
+      const program = compile_assembly(action.payload);
+      if (program.error) {
+        state.error = program.error.message;
+      } else {
+        state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';' && !line.trim().startsWith('.'));
+        state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
+        state.cpu.reset();
+        state.cpu.load(program.ins);
+        state.cpu.run();
+        state.error = undefined;
+      }
     },
   },
   // The `extraReducers` field lets the slice handle actions defined elsewhere,
@@ -29,11 +52,13 @@ export const cpuSlice = createSlice({
   },
 });
 
-export const { runCode } = cpuSlice.actions;
+export const { updateProgram, runCode } = cpuSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
 // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
 export const selectMemory = (state: RootState) => state.cpu.cpu.memory;
+export const selectProgram = (state: RootState) => state.cpu.cpu.program;
+export const selectAssembly = (state: RootState) => state.cpu.assembly;
 
 export default cpuSlice.reducer;
