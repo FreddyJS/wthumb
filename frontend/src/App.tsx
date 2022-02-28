@@ -18,8 +18,23 @@ import CodeEditor from './components/CodeEditor';
 // Emulator
 import { runCode, updateProgram } from './reducers/cpuReducer';
 
+
+const codeExample = 
+`; This a simple example in arm thumb!
+
+.text ; Start of .text section. This is where the code will be placed.
+  mov r0, #2    ; r0 = 2
+  add r0, #1    ; r0 = 3
+  add sp, #8    ; sp = sp + 8
+  add sp, #-3   ; sp = sp - 3 = 5
+
+  mov r1, #0x2  ; r1 = 2
+  add r1, r1    ; r1 = 4
+  mov r9, r1    ; r9 = 4
+  mov r8, r9    ; r8 = 4`;
+
 function App() {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(codeExample);
   const error = useAppSelector((state) => state.cpu.error);
   const dispatch = useAppDispatch();
 
@@ -56,7 +71,7 @@ function App() {
         </div>
         <div className='content-code'>
           <Program/>
-          <CodeEditor placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
+          <CodeEditor value={code} placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
           <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
             <Registers/>
             <Memory/>
