@@ -10,13 +10,13 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - name: Checkout
+      - name: Checkout 🛎️
         uses: actions/checkout@master
 
-      - name: Install dependencies
+      - name: Install dependencies  🔧 
         run: yarn install
       
-      - name: Build
+      - name: Build  🔧 
         run: yarn build
 
       - name: Deploy 🚀

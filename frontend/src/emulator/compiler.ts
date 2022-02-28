@@ -280,18 +280,15 @@ function compile_assembly(source: string): Program {
   }
 
   let textSection = '';
-  let dataSection = '';
   if (dataSectionIndex === -1) {
     // No data section in assembly, no memory needed
     textSection = source.slice(textSectionIndex + 5);
   } else if (dataSectionIndex < textSectionIndex) {
     // Data section is before text section
     textSection = source.slice(textSectionIndex + 5);
-    dataSection = source.slice(dataSectionIndex + 5, textSectionIndex);
   } else {
     // Data section is after text section
     textSection = source.slice(textSectionIndex + 5, dataSectionIndex);
-    dataSection = source.slice(dataSectionIndex + 5);
   }
 
   const lines = textSection.split('\n');
