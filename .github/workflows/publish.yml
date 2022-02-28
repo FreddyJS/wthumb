@@ -12,20 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        working-directory: ./frontend
         uses: borales/actions-yarn@v2.3.0
         with:
           cmd: install # will run `yarn install` command
+          working-directory: ./frontend
       - name: Build
-        working-directory: ./frontend
         uses: borales/actions-yarn@v2.3.0
         with:
           cmd: build # will run `yarn build` command
+          working-directory: ./frontend
 
       - name: Deploy
-        working-directory: ./frontend
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
+          working-directory: ./frontend
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
