@@ -42,11 +42,11 @@ type armCPU_T = {
 function defaultCPU(): armCPU_T {
   const armCPU: armCPU_T = {
     regs: { ...defaultRegs },
+    pc: 0,
+    sp: 0,
     memory: new Array(defaultMemorySize).fill(0),
     stack: new Array(defaultStackSize).fill(0),
     program: [],
-    pc: 0,
-    sp: 0,
 
     // Methods
     run() {
@@ -98,16 +98,27 @@ function defaultCPU(): armCPU_T {
         case Operation.ADD:
           {
             // TODO: Add support for other types of registers (pc, sp)
-            const [op1, op2] = ins.operands;
+            const [op1, op2, op3] = ins.operands;
+            const extraAdd = op3 !== undefined ? (
+              op3.type === OperandType.HexInmediate ? parseInt(op3.value.slice(1), 16) : parseInt(op3.value.slice(1), 10)
+            ) : 0;
 
-            if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
-              this.regs[op1.value] += this.regs[op2.value];
-            } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
+            if (op1.type === OperandType.LowRegister || op1.type === OperandType.HighRegister) {
+              if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
+                this.regs[op1.value] += this.regs[op2.value] + extraAdd;
+              } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
+                const radix = op2.type === OperandType.HexInmediate ? 16 : 10;
+                const value = parseInt(op2.value.slice(1), radix);
+                this.regs[op1.value] += value + extraAdd;
+              } else {
+                throw new Error('Invalid inmediate type for ADD. This should never happen.');
+              }
+            } else if (op1.type === OperandType.SpRegister) {
               const radix = op2.type === OperandType.HexInmediate ? 16 : 10;
               const value = parseInt(op2.value.slice(1), radix);
-              this.regs[op1.value] += value;
+              this.sp += value + extraAdd;
             } else {
-              throw new Error('Invalid operand type for ADD. This should never happen.');
+              throw new Error('Invalid register type for ADD. This should never happen.');
             }
           }
           break;

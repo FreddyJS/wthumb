@@ -10,17 +10,15 @@ const codeExample =
 `; This a simple example in arm thumb!
 
 .text ; Start of .text section. This is where the code will be placed.
-  add r0, #2    ; r0 = 2
-  add r0, #0xf  ; r0 = 17
-  add r1, r0    ; r1 = 17
-  add r2, #0x2  ; r2 = 2
-  add r2, r2    ; r2 = 4
-  add r8, r2    ; r8 = 4
-  add r8, r8    ; r8 = 8
-  add r9, r8    ; r9 = 8
-  add r9, r9    ; r9 = 16
-  add r9, r2    ; r9 = 20
-  ; r0 = 17, r1 = 17, r2 = 4, r8 = 8, r9 = 20`;
+  mov r0, #2    ; r0 = 2
+  add r0, #1    ; r0 = 3
+  add sp, #8    ; sp = sp + 8
+  add sp, #-3   ; sp = sp - 3 = 5
+
+  mov r1, #0x2  ; r1 = 2
+  add r1, r1    ; r1 = 4
+  mov r9, r1    ; r9 = 4
+  mov r8, r9    ; r8 = 4`;
 
 type CodeEditorProps = {
   placeHolder: string;
