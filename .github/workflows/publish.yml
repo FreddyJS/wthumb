@@ -10,7 +10,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     defaults:
-      run:
+      steps:
         working-directory: ./frontend # The working directory path
     steps:
       - uses: actions/checkout@v2
