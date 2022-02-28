@@ -1,31 +1,23 @@
-name: GitHub Pages
-
+name: Github Pages
 on:
   push:
     branches:
       - master
-  pull_request:
-
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     defaults:
-      steps:
-        working-directory: ./frontend # The working directory path
+      run:
+        working-directory: frontend
     steps:
-      - uses: actions/checkout@v2
       - name: Install dependencies
-        uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: install # will run `yarn install` command
+        run: yarn install
+      
       - name: Build
-        uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: build # will run `yarn build` command
+        run: yarn build
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
+          branch: gh-pages # The branch the action should deploy to.
+          folder: ./frontend/build # The folder the action should deploy.
