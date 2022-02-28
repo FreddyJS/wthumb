@@ -99,9 +99,12 @@ function defaultCPU(): armCPU_T {
           {
             // TODO: Add support for other types of registers (pc, sp)
             const [op1, op2, op3] = ins.operands;
-            const extraAdd = op3 !== undefined ? (
-              op3.type === OperandType.HexInmediate ? parseInt(op3.value.slice(1), 16) : parseInt(op3.value.slice(1), 10)
-            ) : 0;
+            const extraAdd =
+              op3 !== undefined
+                ? op3.type === OperandType.HexInmediate
+                  ? parseInt(op3.value.slice(1), 16)
+                  : parseInt(op3.value.slice(1), 10)
+                : 0;
 
             if (op1.type === OperandType.LowRegister || op1.type === OperandType.HighRegister) {
               if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {

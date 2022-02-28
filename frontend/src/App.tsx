@@ -5,6 +5,7 @@ import './App.scss';
 import logo from './logo.svg';
 
 // Bootstrap Components
+import Alert from 'react-bootstrap/Alert';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/esm/Button';
 
@@ -44,13 +45,14 @@ function App() {
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
-        <div>Lines of code: {code.split("\n").length}
+        <div style={{display: "flex", flexDirection: "column"}}>
+          <p>Lines of code: {code.split("\n").length}</p>
           <div>
             <Button variant="outline-primary" onClick={startEmul}>Run</Button>
             <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
             <Button variant="outline-primary">Clear Memory</Button>
           </div>
-          <p>{error !== undefined ? error : ''}</p>
+          <p>{error !== undefined ? <Alert variant='danger'>{error}</Alert> : ''}</p>
         </div>
         <div className='content-code'>
           <Program/>

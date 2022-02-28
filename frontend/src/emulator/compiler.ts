@@ -44,7 +44,15 @@ type Program = {
   ins: Instruction[];
 };
 
-function strip_comments(source: string) {
+function isGeneralRegisterType(type: OperandType): boolean {
+  return type === OperandType.LowRegister || type === OperandType.HighRegister;
+}
+
+function isInmediateType(type: OperandType): boolean {
+  return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
+}
+
+function stripComments(source: string) {
   return source
     .split('\n')
     .map((line) => {
@@ -59,18 +67,18 @@ function strip_comments(source: string) {
     .join('\n');
 }
 
-function strip_empty_lines(source: string) {
+function stripEmptyLines(source: string) {
   return source
     .split('\n')
     .filter((line) => line.length > 0)
     .join('\n');
 }
 
-function clean_input(source: string): string {
-  return strip_empty_lines(strip_comments(source)).toLowerCase();
+function cleanInput(source: string): string {
+  return stripEmptyLines(stripComments(source)).toLowerCase();
 }
 
-function operand_to_optype(operand: string): OperandType | string {
+function operandToOptype(operand: string): OperandType | string {
   if (operand.startsWith('r')) {
     // Register Operand
     const reg = parseInt(operand.slice(1), 10);
@@ -88,7 +96,6 @@ function operand_to_optype(operand: string): OperandType | string {
       }
       return OperandType.HexInmediate;
     } else if (!isNaN(operand.slice(1) as any)) {
-      // Decimal Inmediate Operand
       return OperandType.DecInmediate;
     } else {
       return 'Invalid inmediate. Expected #0x[0-F] or #[0-9] but got ' + operand;
@@ -100,7 +107,7 @@ function operand_to_optype(operand: string): OperandType | string {
   }
 }
 
-function line_to_op(line: string): Instruction | string {
+function lineToInstruction(line: string): Instruction | string {
   const words = line.split(' ');
   const operands = words
     .slice(1)
@@ -120,36 +127,49 @@ function line_to_op(line: string): Instruction | string {
         return 'Invalid number of operands for MOV. Expected 2, got ' + operands.length;
       }
 
-      const op1Type = operand_to_optype(operands[0]);
+      const op1Type = operandToOptype(operands[0]);
+      const op2Type = operandToOptype(operands[1]);
       if (typeof op1Type === 'string') {
         return op1Type;
-      }
-
-      const op2Type = operand_to_optype(operands[1]);
-      if (typeof op2Type === 'string') {
+      } else if (typeof op2Type === 'string') {
         return op2Type;
       }
 
-      if (
-        op1Type === OperandType.HighRegister &&
-        (op2Type === OperandType.HexInmediate || op2Type === OperandType.DecInmediate)
-      ) {
-        return 'Only low registers allowed with inmediate operand';
-      } else if (op2Type === OperandType.HexInmediate || op2Type === OperandType.DecInmediate) {
-        // MOV only allows 8-bit inmediate values
-        const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
-        if (parseInt(operands[1].slice(1), radix) > 255) {
-          return 'Invalid inmediate value. Inmediate value for MOV must be between 0 and 255';
-        }
-      }
+      if (isGeneralRegisterType(op1Type)) {
+        if (isGeneralRegisterType(op2Type)) {
+          // CASE: MOV r1, r2
+          return {
+            operation: Operation.MOV,
+            operands: [
+              { type: op1Type, value: operands[0] },
+              { type: op2Type, value: operands[1] },
+            ],
+          };
+        } else if (isInmediateType(op2Type)) {
+          const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
+          const value = parseInt(operands[1].slice(1), radix);
+          if (value < 0 || value > 255) {
+            // MOV allows only 8-bit values
+            return 'Invalid inmediate for MOV. Expected 0x[0-F] or [0-9] between 0 and 255 but got ' + operands[1];
+          } else if (op1Type === OperandType.HighRegister) {
+            // MOV allows only low registers with immediate values
+            return 'Invalid register for MOV. Only low registers are allowed with inmediate values';
+          }
 
-      return {
-        operation,
-        operands: [
-          { type: op1Type, value: operands[0] },
-          { type: op2Type, value: operands[1] },
-        ],
-      };
+          // CASE: MOV r1, #0xFF
+          return {
+            operation: Operation.MOV,
+            operands: [
+              { type: op1Type, value: operands[0] },
+              { type: op2Type, value: operands[1] },
+            ],
+          };
+        } else {
+          return 'Invalid operand for MOV. Expected r[0-7] or #[0-9a-fA-F] but got ' + operands[1];
+        }
+      } else {
+        return 'Invalid operand for MOV. Expected r[0-7] or r[8-15] but got ' + operands[0];
+      }
     }
 
     case Operation.ADD: {
@@ -157,83 +177,82 @@ function line_to_op(line: string): Instruction | string {
         return 'Invalid number of operands for ADD. Expected 2 or 3, got ' + operands.length;
       }
 
-      const op1Type = operand_to_optype(operands[0]);
+      const op1Type = operandToOptype(operands[0]);
+      const op2Type = operandToOptype(operands[1]);
       if (typeof op1Type === 'string') {
         return op1Type;
-      }
-
-      const op2Type = operand_to_optype(operands[1]);
-      if (typeof op2Type === 'string') {
+      } else if (typeof op2Type === 'string') {
         return op2Type;
       }
 
-      if (op1Type === OperandType.LowRegister || op1Type === OperandType.HighRegister) {
-        if (op1Type === OperandType.HighRegister && (op2Type === OperandType.HexInmediate || op2Type === OperandType.DecInmediate)) {
-          return 'Only low registers allowed with inmediate operand';
-        }
+      if (isGeneralRegisterType(op1Type)) {
+        if (isGeneralRegisterType(op2Type)) {
+          // The 2 first operands are general registers (high or low). The third one should be an immediate value if exists.
 
-        if (op2Type === OperandType.HexInmediate || op2Type === OperandType.DecInmediate) {
-          const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
-          if (parseInt(operands[1].slice(1), radix) > 255) {  // ADD only allows 8-bit inmediate values
-            return 'Invalid inmediate value. Inmediate value for ADD must be between 0 and 255';
-          }
-        }
-
-        // If exists a third operand for ADD it must be a #3bit_Imm. ADD r1, r2, #3bit_Imm
-        if (operands.length === 3) {
-          if (op1Type !== OperandType.LowRegister || op2Type !== OperandType.LowRegister) {
-            return "Only low registers allowed with inmediate operand";
-          }
-  
-          const op3Type = operand_to_optype(operands[2]);
-          if (op1Type !== OperandType.LowRegister || op2Type !== OperandType.LowRegister) {
-            return 'Invalid operands for ADD. Expected add r1, r2 [, #3bit_Imm]';
-          } else if (typeof op3Type === 'string') {
-            return op3Type;
-          } else if (op3Type !== OperandType.DecInmediate && op3Type !== OperandType.HexInmediate) {
-            return 'Invalid operand for ADD. Expected add r1, r2 [, #3bit_Imm]';
-          } else if (op3Type === OperandType.DecInmediate || op3Type === OperandType.HexInmediate) {
-            const radix = op3Type === OperandType.HexInmediate ? 16 : 10;
-            if (parseInt(operands[2].slice(1), radix) > 7) {
-              return 'Invalid inmediate value. Inmediate value for ADD with 3 operands must be between 0 and 7';
+          if (operands.length === 3) {
+            const op3Type = operandToOptype(operands[2]);
+            if (typeof op3Type === 'string') {
+              return op3Type;
+            } else if (op2Type === OperandType.HighRegister) {
+              return 'Invalid register for ADD. Only low registers are allowed with inmediate values';
             }
+
+            if (isInmediateType(op3Type)) {
+              // CASE: ADD r1, r2, #0x0
+              return {
+                operation: Operation.ADD,
+                operands: [
+                  { type: op1Type, value: operands[0] },
+                  { type: op2Type, value: operands[1] },
+                  { type: op3Type, value: operands[2] },
+                ],
+              };
+            } else {
+              return 'Invalid operand for ADD. Expected r[0-7] or r[8-15] but got ' + operands[2];
+            }
+          } else if (operands.length === 2) {
+            // CASE: ADD r1, r2
+            return {
+              operation: Operation.ADD,
+              operands: [
+                { type: op1Type, value: operands[0] },
+                { type: op2Type, value: operands[1] },
+              ],
+            };
+          } else {
+            return 'Invalid number of operands for ADD. Expected 2 or 3, got ' + operands.length;
           }
-  
+        } else if (isInmediateType(op2Type)) {
+          const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
+          if (parseInt(operands[1].slice(1), radix) > 255) {
+            // ADD only allows 8-bit inmediate values
+            return 'Invalid inmediate value. Inmediate value for ADD must be between 0 and 255';
+          } else if (op1Type === OperandType.HighRegister) {
+            return 'Only low registers allowed with inmediate operand';
+          }
+
+          // CASE: ADD r1, #0x0
           return {
-            operation,
+            operation: Operation.ADD,
             operands: [
               { type: op1Type, value: operands[0] },
               { type: op2Type, value: operands[1] },
-              { type: op3Type, value: operands[2] },
             ],
           };
+        } else {
+          return 'Invalid operand for ADD. Expected r[0-7] or r[8-15] but got ' + operands[1];
         }
-
-        return {
-          operation,
-          operands: [
-            { type: op1Type, value: operands[0] },
-            { type: op2Type, value: operands[1] },
-          ],
-        };
       } else if (op1Type === OperandType.SpRegister) {
-        // ADD sp, #7bit_Imm or ADD sp, #-7bit_Imm
-        if (operands.length !== 2) {
-          return 'Invalid number of operands for ADD sp, #7bit_Imm. Expected 2, got ' + operands.length;
-        }
-
-        const op2Type = operand_to_optype(operands[1]);
-        if (typeof op2Type === 'string') {
-          return op2Type;
-        }
-
-        if (op2Type === OperandType.DecInmediate || op2Type === OperandType.HexInmediate) {
+        if (isInmediateType(op2Type)) {
           const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
           if (parseInt(operands[1].slice(1), radix) > 127) {
             return 'Invalid inmediate value. Inmediate value for ADD sp, #7bit_Imm must be between -128 and 127';
           }
+        } else {
+          return 'Invalid operand for ADD sp, #7bit_Imm. Expected #[0-9] or #0x[0-F] but got ' + operands[1];
         }
 
+        // CASE: ADD sp, #7bit_Imm
         return {
           operation,
           operands: [
@@ -252,7 +271,7 @@ function line_to_op(line: string): Instruction | string {
 }
 
 function compile_assembly(source: string): Program {
-  source = clean_input(source);
+  source = cleanInput(source);
 
   const textSectionIndex = source.indexOf('.text');
   const dataSectionIndex = source.indexOf('.data');
@@ -286,7 +305,7 @@ function compile_assembly(source: string): Program {
       continue;
     }
 
-    const op = line_to_op(line);
+    const op = lineToInstruction(line);
     if (typeof op === 'string') {
       program.error = { message: op, line: i, column: 0 };
       return program;
