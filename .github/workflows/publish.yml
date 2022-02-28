@@ -10,8 +10,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     defaults:
-    run:
-      working-directory: ./frontend # The working directory path
+      run:
+        working-directory: ./frontend # The working directory path
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
