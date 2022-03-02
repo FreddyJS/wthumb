@@ -27,9 +27,8 @@ export const cpuSlice = createSlice({
       if (program.error) {
         state.error = program.error.message;
       } else {
-        state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';' && !line.trim().startsWith('.'));
-        state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
         state.error = undefined;
+        state.cpu.program = program.ins;
       }
     },
     runCode: (state, action) => {
@@ -37,8 +36,6 @@ export const cpuSlice = createSlice({
       if (program.error) {
         state.error = program.error.message;
       } else {
-        state.assembly = action.payload.split('\n').filter((line: string) => line.trim() !== '' && line.trim()[0] !== ';' && !line.trim().startsWith('.'));
-        state.assembly = state.assembly.map((line: string) => line.split(';')[0].trim());
         state.cpu.reset();
         state.cpu.load(program.ins);
         state.cpu.run();

@@ -22,13 +22,21 @@ const defaultRegs = {
   r15: 0x00,
 };
 
+enum Flags {
+  N = 0x80000000,
+  Z = 0x40000000,
+  C = 0x20000000,
+  V = 0x10000000,
+}
+
 type armCPU_T = {
   regs: { [key: string]: number };
+  pc: number;
+  sp: number;
+  cpsr: number;
   memory: number[];
   stack: number[];
   program: Instruction[];
-  pc: number;
-  sp: number;
 
   // Methods
   run: () => void;
@@ -37,6 +45,7 @@ type armCPU_T = {
   load: (program: Instruction[]) => void;
   load_assembly: (assembly: string) => void;
   execute: (ins: Instruction) => void;
+  set_flag: (flag: Flags, value: boolean) => void;
 };
 
 function defaultCPU(): armCPU_T {
@@ -44,6 +53,7 @@ function defaultCPU(): armCPU_T {
     regs: { ...defaultRegs },
     pc: 0,
     sp: 0,
+    cpsr: 0,
     memory: new Array(defaultMemorySize).fill(0),
     stack: new Array(defaultStackSize).fill(0),
     program: [],
@@ -130,6 +140,13 @@ function defaultCPU(): armCPU_T {
           throw new Error('Invalid operation in execute. This should never happen.');
       }
     },
+    set_flag(flag: Flags, value: boolean) {
+      if (value) {
+        this.cpsr |= flag;
+      } else {
+        this.cpsr &= ~flag;
+      }
+    }
   };
 
   return armCPU;

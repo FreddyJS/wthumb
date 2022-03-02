@@ -67,7 +67,8 @@ function App() {
             <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
             <Button variant="outline-primary">Clear Memory</Button>
           </div>
-          <p>{error !== undefined ? <Alert variant='danger'>{error}</Alert> : ''}</p>
+          <p></p>
+          <div>{error !== undefined ? <Alert variant='danger'>{error}</Alert> : ''}</div>
         </div>
         <div className='content-code'>
           <Program/>
