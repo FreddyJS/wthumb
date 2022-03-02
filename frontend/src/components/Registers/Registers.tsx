@@ -23,14 +23,7 @@ const Registers = () => {
       );
     }
 
-    row.push(
-      <Button key={sp} variant="outline-primary" className="registers-item">
-        <div className="registers-item-name">SP</div>
-        <div>
-          <Badge bg="primary" className="registers-item-value">0x{sp.toString(16).padStart(8, '0')}</Badge>
-        </div>
-      </Button>
-    );
+
     return row;
   };
 
@@ -44,6 +37,14 @@ const Registers = () => {
       rows.push(
         <div className="registers-row" key={i}>
           {registers_row(first, last)}
+          {i === total_rows - 1 ? 
+            <Button key={sp} variant="outline-primary" className="registers-item">
+              <div className="registers-item-name">SP</div>
+              <div>
+                <Badge bg="primary" className="registers-item-value">0x{sp.toString(16).padStart(8, '0')}</Badge>
+              </div>
+            </Button>
+          : null}
         </div>
       );
     }
