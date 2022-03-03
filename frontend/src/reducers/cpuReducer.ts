@@ -22,6 +22,9 @@ export const cpuSlice = createSlice({
   initialState: initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
     updateProgram: (state, action) => {
       const program = compile_assembly(action.payload);
       if (program.error) {
@@ -49,7 +52,7 @@ export const cpuSlice = createSlice({
   },
 });
 
-export const { updateProgram, runCode } = cpuSlice.actions;
+export const { setError, updateProgram, runCode } = cpuSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of

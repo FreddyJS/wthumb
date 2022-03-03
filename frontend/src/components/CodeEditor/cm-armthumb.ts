@@ -11,7 +11,7 @@ function mkArmThumb() {
   // architecture.
   // If no architecture is pased in "parserConfig" then only multiline
   // comments will have syntax support.
-  var lineCommentStartSymbol = ";";
+  var lineCommentStartSymbol = "@";
 
   // These directives are architecture independent.
   // Machine specific directives should go in their respective

@@ -1,5 +1,18 @@
 version: '3.8'
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend:/api
+    command:
+      - bash
+      - -c
+      - echo 'Freezing container. Execute in container "python manage.py runserver 0.0.0.0:8000"' && tail -f /dev/null
+
   frontend:
     build:
       context: ./frontend

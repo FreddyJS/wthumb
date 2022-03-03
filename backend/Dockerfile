@@ -1,6 +1,6 @@
 FROM python:3.8.0
 
-RUN apt-get update && apt-get install gcc-arm-linux-gnueabihf
+RUN apt-get update && apt-get install -y gcc-arm-linux-gnueabihf
 
 WORKDIR /api
 COPY . .

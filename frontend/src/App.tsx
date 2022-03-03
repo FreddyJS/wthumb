@@ -16,31 +16,48 @@ import Registers from 'components/Registers';
 import CodeEditor from './components/CodeEditor';
 
 // Emulator
-import { runCode, updateProgram } from './reducers/cpuReducer';
+import { runCode, setError, updateProgram } from './reducers/cpuReducer';
 
+import axios from 'axios';
+
+axios.interceptors.response.use(undefined, function axiosException(err) {
+  return Promise.reject(err)
+})
 
 const codeExample = 
-`; This a simple example in arm thumb!
+`@ This a simple example in arm thumb!
 
-.text ; Start of .text section. This is where the code will be placed.
-  mov r0, #2    ; r0 = 2
-  add r0, #1    ; r0 = 3
-  add sp, #8    ; sp = sp + 8
-  add sp, #-3   ; sp = sp - 3 = 5
+.text @ Start of .text section. This is where the code will be placed.
+  mov r0, #2    @ r0 = 2
+  add r0, #1    @ r0 = 3
+  add sp, #8    @ sp = sp + 8
+  add sp, #-4   @ sp = sp - 4 = 4
 
-  mov r1, #0x2  ; r1 = 2
-  add r1, r1    ; r1 = 4
-  mov r9, r1    ; r9 = 4
-  mov r8, r9    ; r8 = 4`;
+  mov r1, #0x2  @ r1 = 2
+  add r1, r1    @ r1 = 4
+  mov r9, r1    @ r9 = 4
+  mov r8, r9    @ r8 = 4`;
 
 function App() {
   const [code, setCode] = useState(codeExample);
   const error = useAppSelector((state) => state.cpu.error);
   const dispatch = useAppDispatch();
 
-  const startEmul = () => {
-    dispatch(runCode(code));
-  };
+  const startEmul = async () => {
+    try {
+      const res = await axios.post("http://localhost:8000/api/assembly/validate/", {assembly: code})
+      const data = res.data
+      console.log(data)
+      if (data["compiled"] === true) {
+        dispatch(runCode(code))
+      } else {
+        dispatch(setError(data["message"]))
+      }
+    } catch (e) {
+      console.log("The backend is not ready or online. Using typescript compiler")
+      dispatch(runCode(code))
+    }
+  }
 
   return (
     <div className="App">
@@ -68,7 +85,7 @@ function App() {
             <Button variant="outline-primary">Clear Memory</Button>
           </div>
           <p></p>
-          <div>{error !== undefined ? <Alert variant='danger'>{error}</Alert> : ''}</div>
+          <div>{error !== undefined ? <Alert variant='danger' style={{textAlign: "left"}}>{error.split("\n").map((line: string) => <p>{line}</p>)}</Alert> : ''}</div>
         </div>
         <div className='content-code'>
           <Program/>
