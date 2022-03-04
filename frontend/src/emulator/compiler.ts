@@ -291,6 +291,7 @@ function lineToInstruction(line: string): Instruction | string {
 }
 
 function compile_text_section(textSection: string): Program {
+  const labels: { [key: string]: number } = {};
   const lines = textSection.split('\n');
   const program: Program = {
     error: undefined,
@@ -307,6 +308,15 @@ function compile_text_section(textSection: string): Program {
     if (/^\w+:/.test(line)) {
       // A label exists in this line
       label = line.split(':')[0];
+      if (labels[label] !== undefined) {
+        program.error = {
+          line: i + 1,
+          message: 'The symbol `' + label + '` is already defined',
+        }
+        return program;
+      }
+
+      labels[label] = i;
       line = line.slice(label.length + 1).trim();
       while (line.length === 0) {
         // The line is just a label, parse next line
