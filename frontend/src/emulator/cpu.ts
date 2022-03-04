@@ -1,4 +1,7 @@
-import compile_assembly, { Instruction, OperandType, Operation, assert } from './compiler';
+import compile_assembly, { assert } from './compiler';
+
+import { Operation, OperandType, Program } from './types';
+import type { Instruction } from './types';
 
 const defaultMemorySize = 64;
 const defaultStackSize = 64;
@@ -42,20 +45,25 @@ type armCPU_T = {
   run: () => void;
   step: () => void;
   reset: () => void;
-  load: (program: Instruction[]) => void;
+  load: (program: Program) => void;
   load_assembly: (assembly: string) => void;
   execute: (ins: Instruction) => void;
   set_flag: (flag: Flags, value: boolean) => void;
 };
 
-function defaultCPU(): armCPU_T {
+type cpuProps = {
+  memorySize?: number;
+  stackSize?: number;
+};
+
+function defaultCPU(props: cpuProps = {memorySize: defaultMemorySize, stackSize: defaultStackSize}): armCPU_T {
   const armCPU: armCPU_T = {
     regs: { ...defaultRegs },
     pc: 0,
     sp: 0,
     cpsr: 0,
-    memory: new Array(defaultMemorySize).fill(0),
-    stack: new Array(defaultStackSize).fill(0),
+    memory: new Array(props.memorySize).fill(0),
+    stack: new Array(props.stackSize).fill(0),
     program: [],
 
     // Methods
@@ -76,8 +84,9 @@ function defaultCPU(): armCPU_T {
       this.pc = 0;
       this.sp = 0;
     },
-    load(program: Instruction[]) {
-      this.program = program;
+    load(program: Program) {
+      // TODO: Copy the program memory to the CPU memory
+      this.program = program.ins;
     },
     load_assembly(assembly: string) {
       const compiled = compile_assembly(assembly);
@@ -92,16 +101,14 @@ function defaultCPU(): armCPU_T {
         case Operation.MOV:
           {
             const [op1, op2] = ins.operands;
-            // op1 is always a register and op2 can be a register or inmediate
-            if (op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister) {
-              this.regs[op1.value] = this.regs[op2.value];
-            } else if (op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate) {
-              const radix = op2.type === OperandType.HexInmediate ? 16 : 10;
-              const value = parseInt(op2.value.slice(1), radix);
-              this.regs[op1.value] = value;
-            } else {
-              throw new Error('Invalid operand type for MOV. This should never happen.');
-            }
+            const value =
+              op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister
+                ? this.regs[op2.value]
+                : op2.type === OperandType.HexInmediate
+                ? parseInt(op2.value.slice(1), 16)
+                : parseInt(op2.value.slice(1), 10);
+
+            this.regs[op1.value] = value;
           }
           break;
 
@@ -113,7 +120,9 @@ function defaultCPU(): armCPU_T {
 
             const sum1 =
               op3 === undefined
-                ? this.regs[destReg]
+                ? op1.type === OperandType.SpRegister
+                  ? this.sp
+                  : this.regs[op1.value]
                 : op2.type === OperandType.SpRegister
                 ? this.sp
                 : this.regs[op2.value];
@@ -132,7 +141,7 @@ function defaultCPU(): armCPU_T {
                 : this.regs[op3.value];
 
             if (destReg === 'sp') {
-              this.sp += sum2;
+              this.sp = sum1 + sum2;
             } else {
               this.regs[destReg] = sum1 + sum2;
             }

@@ -1,60 +1,32 @@
+import { Operation, OperandType, wordToOperation } from './types';
+import type { Program, Instruction } from './types';
+
 const assert = (condition: boolean, message: string) => {
   if (!condition) {
     throw new Error(message);
   }
 };
 
-enum Operation {
-  MOV,
-  ADD,
-  TOTAL_OPERATIONS,
-}
-
-const wordToOperation: { [key: string]: Operation } = {
-  mov: Operation.MOV,
-  add: Operation.ADD,
-};
-
-const operationToWord: { [key: number]: string } = {
-  [Operation.MOV]: 'mov',
-  [Operation.ADD]: 'add',
-};
-
-enum OperandType {
-  LowRegister,
-  HighRegister,
-  SpRegister,
-  HexInmediate,
-  DecInmediate,
-}
-
-type CompilerError = {
-  message: string;
-  line: number;
-};
-
-type Operand = {
-  type: OperandType;
-  value: string;
-};
-
-type Instruction = {
-  operation: Operation;
-  operands: Operand[];
-  label?: string;
-};
-
-type Program = {
-  error?: CompilerError;
-  ins: Instruction[];
-};
-
-function isGeneralReg(type: OperandType): boolean {
+function isLowHighRegister(type: OperandType): boolean {
   return type === OperandType.LowRegister || type === OperandType.HighRegister;
 }
 
-function isInmediateVal(type: OperandType): boolean {
+function isInmediateValue(type: OperandType): boolean {
   return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
+}
+
+function isOutOfRange(inmediate: string, max: number): boolean {
+  const radix = inmediate.startsWith('#0x') ? 16 : 10;
+  const num = parseInt(inmediate.slice(1), radix);
+
+  return num > max;
+}
+
+function isAligned(addr: string, size: number): boolean {
+  const radix = addr.startsWith('#0x') ? 16 : 10;
+  const num = parseInt(addr.slice(1), radix);
+
+  return num % size === 0;
 }
 
 function stripComments(source: string) {
@@ -77,32 +49,24 @@ function cleanInput(source: string): string {
 }
 
 function operandToOptype(operand: string): OperandType | undefined {
-  if (operand.startsWith('r')) {
-    // Register Operand
+  // Check by regular expressions the corresponding operand type. If none is found, return undefined.
+  let type: OperandType | undefined;
+
+  if (/^r\d+$/.test(operand)) {
     const reg = parseInt(operand.slice(1), 10);
-    if (reg >= 0 && reg <= 7) {
-      return OperandType.LowRegister;
-    } else if (reg >= 8 && reg <= 15) {
-      return OperandType.HighRegister;
-    }
-  } else if (operand.startsWith('#')) {
-    if (operand.startsWith('#0x')) {
-      if (!isNaN(operand.slice(1) as any)) {
-        return OperandType.HexInmediate;
-      }
-    } else if (!isNaN(operand.slice(1) as any)) {
-      return OperandType.DecInmediate;
-    }
-  } else if (operand === 'sp') {
-    return OperandType.SpRegister;
+    type = reg < 8 ? OperandType.LowRegister : reg < 16 ? OperandType.HighRegister : undefined;
+  } else if (/^sp$/.test(operand)) {
+    type = OperandType.SpRegister;
+  } else if (/^#0x[0-9a-f]+$/.test(operand) || /^#\d+$/.test(operand)) {
+    type = operand.startsWith('#0x') ? OperandType.HexInmediate : OperandType.DecInmediate;
   }
 
-  return undefined;
+  return type;
 }
 
 function lineToInstruction(line: string): Instruction | string {
   const words = line.split(' ');
-  const operands = words
+  const args = words
     .slice(1)
     .join(' ')
     .split(',')
@@ -116,24 +80,22 @@ function lineToInstruction(line: string): Instruction | string {
   assert(Operation.TOTAL_OPERATIONS === 2, 'Exhaustive handling of operations in line_to_op');
   switch (operation) {
     case Operation.MOV: {
-      if (operands.length !== 2) {
-        return 'Invalid number of operands for MOV. Expected 2, got ' + operands.length;
+      if (args.length !== 2) {
+        return 'Invalid number of operands for MOV. Expected 2, got ' + args.length;
       }
 
-      const op1Type = operandToOptype(operands[0]);
-      const op2Type = operandToOptype(operands[1]);
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
 
-      if (op1Type === undefined || !isGeneralReg(op1Type)) {
-        return 'Invalid operand 1 for MOV. Expected register, got ' + operands[0];
-      } else if (op2Type === undefined || (!isGeneralReg(op2Type) && !isInmediateVal(op2Type))) {
-        return 'Invalid operand 2 for MOV. Expected register or #8bit_Inm, got ' + operands[1];
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for MOV. Expected register, got ' + args[0];
+      } else if (op2Type === undefined || (!isLowHighRegister(op2Type) && !isInmediateValue(op2Type))) {
+        return 'Invalid operand 2 for MOV. Expected register or #8bit_Inm, got ' + args[1];
       }
 
-      if (isInmediateVal(op2Type)) {
-        const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
-        const value = parseInt(operands[1].slice(1), radix);
-        if (value < 0 || value > 255) {
-          return 'Invalid inmediate for MOV. Number out of range. Expected 0-255 but got ' + value;
+      if (isInmediateValue(op2Type)) {
+        if (isOutOfRange(args[1], 255)) {
+          return 'Invalid inmediate for MOV. Number out of range. Expected 0-255 but got ' + args[1];
         } else if (op1Type === OperandType.HighRegister) {
           return 'Invalid register for MOV. Only low registers are allowed with inmediate values';
         }
@@ -142,184 +104,183 @@ function lineToInstruction(line: string): Instruction | string {
       // CASE: MOV r1, [Rs | #0xFF]
       return {
         operation: Operation.MOV,
+        name: 'mov',
         operands: [
-          { type: op1Type, value: operands[0] },
-          { type: op2Type, value: operands[1] },
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
         ],
       };
     }
 
     case Operation.ADD: {
-      if (operands.length !== 2 && operands.length !== 3) {
+      if (args.length !== 2 && args.length !== 3) {
         return 'Invalid number of operands for ADD';
       }
 
-      const op1Type = operandToOptype(operands[0]);
-      const op2Type = operandToOptype(operands[1]);
-      if (op1Type === undefined || (!isGeneralReg(op1Type) && op1Type !== OperandType.SpRegister)) {
-        return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + operands[0];
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || (!isLowHighRegister(op1Type) && op1Type !== OperandType.SpRegister)) {
+        return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0];
       } else if (op2Type === undefined) {
-        return 'Invalid operand 2 for ADD. Unexpected value: ' + operands[1];
+        return 'Invalid operand 2 for ADD. Unexpected value: ' + args[1];
       }
 
-      if (operands.length === 2) {
+      if (args.length === 2) {
         // ADD SHORT FORM
         switch (op1Type) {
           case OperandType.LowRegister:
-            if (!isInmediateVal(op2Type) && !isGeneralReg(op2Type) && op2Type !== OperandType.SpRegister) {
-              return 'Invalid operand 2 for ADD. Expected #Inm, r[0-15] or sp, got ' + operands[1];
-            } else if (isInmediateVal(op2Type)) {
-              const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
-              const value = parseInt(operands[1].slice(1), radix);
-              if (value < 0 || value > 255) {
-                return 'Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + value;
-              }
+            if (!isInmediateValue(op2Type) && !isLowHighRegister(op2Type) && op2Type !== OperandType.SpRegister) {
+              return 'Invalid operand 2 for ADD. Expected #Inm, r[0-15] or sp, got ' + args[1];
+            } else if (isInmediateValue(op2Type) && isOutOfRange(args[1], 255)) {
+              return 'Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + args[1];
             }
 
             // CASE: ADD r1, [Rs | #Inm | sp]
             return {
               operation: Operation.ADD,
+              name: 'add',
               operands: [
-                { type: op1Type, value: operands[0] },
-                { type: op2Type, value: operands[1] },
+                { type: op1Type, value: args[0] },
+                { type: op2Type, value: args[1] },
               ],
             };
 
           case OperandType.HighRegister:
-            if (!isGeneralReg(op2Type) && op2Type !== OperandType.SpRegister) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + operands[1];
+            if (isInmediateValue(op2Type)) {
+              return 'Invalid operand 2 for ADD. Only low registers are allowed with inmediate values';
+            } else if (!isLowHighRegister(op2Type) && op2Type !== OperandType.SpRegister) {
+              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
             }
 
             return {
               operation: Operation.ADD,
+              name: 'add',
               operands: [
-                { type: op1Type, value: operands[0] },
-                { type: op2Type, value: operands[1] },
+                { type: op1Type, value: args[0] },
+                { type: op2Type, value: args[1] },
               ],
             };
 
           case OperandType.SpRegister:
-            if (!isInmediateVal(op2Type) && !isGeneralReg(op2Type)) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or #Inm, got ' + operands[1];
-            } else if (isInmediateVal(op2Type)) {
-              const radix = op2Type === OperandType.HexInmediate ? 16 : 10;
-              const value = parseInt(operands[1].slice(1), radix);
-              if (value < 0 || value > 508) {
-                return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + value;
-              } else if (value % 4 !== 0) {
-                return 'Invalid inmediate for ADD. Number not multiple of 4. Expected 0-508 but got ' + value;
+            if (!isInmediateValue(op2Type) && !isLowHighRegister(op2Type)) {
+              return 'Invalid operand 2 for ADD. Expected r[0-15] or #Inm, got ' + args[1];
+            } else if (isInmediateValue(op2Type)) {
+              if (isOutOfRange(args[1], 508)) {
+                return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + args[1];
+              } else if (!isAligned(args[1], 4)) {
+                return 'Invalid inmediate for ADD. Number not multiple of 4. Expected 0-508 but got ' + args[1];
               }
             }
 
             // CASE: ADD sp, [Rs | #0xFF]
             return {
               operation: Operation.ADD,
+              name: 'add',
               operands: [
-                { type: op1Type, value: operands[0] },
-                { type: op2Type, value: operands[1] },
+                { type: op1Type, value: args[0] },
+                { type: op2Type, value: args[1] },
               ],
             };
 
           default:
-            return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + operands[0];
+            return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0];
         }
       } else {
         // ADD LONG FORM
-        const op3Type = operandToOptype(operands[2]);
+        const op3Type = operandToOptype(args[2]);
 
         if (op3Type === undefined) {
-          return 'Invalid operand 3 for ADD. Expected register or #Inm, got ' + operands[2];
+          return 'Invalid operand 3 for ADD. Expected register or #Inm, got ' + args[2];
         } else if (
           (op1Type === OperandType.HighRegister || op2Type === OperandType.HighRegister) &&
-          isInmediateVal(op3Type)
+          isInmediateValue(op3Type)
         ) {
           return 'Invalid register for ADD. Only low registers are allowed with inmediate values';
         } else if (
-          (isGeneralReg(op3Type) || op3Type === OperandType.SpRegister) &&
-          operands[0] !== operands[1] &&
-          operands[0] !== operands[2]
+          (isLowHighRegister(op3Type) || op3Type === OperandType.SpRegister) &&
+          args[0] !== args[1] &&
+          args[0] !== args[2]
         ) {
           return 'Destiny must overlap one source register';
         }
 
-        // op1Type and op2Type are registers, op3Type is an inmediate
+        // op1Type and op2Type are registers, op3Type is an inmediate or register
         switch (op1Type) {
           case OperandType.LowRegister:
             if (op2Type === OperandType.LowRegister) {
-              if (isInmediateVal(op3Type)) {
-                const radix = op3Type === OperandType.HexInmediate ? 16 : 10;
-                const maxValue = operands[0] === operands[1] ? 255 : 7;
-                const value = parseInt(operands[2].slice(1), radix);
-                if (value < 0 || value > maxValue) {
-                  return 'Invalid inmediate for ADD. Number out of range. Expected 0-' + maxValue + ' but got ' + value;
+              if (isInmediateValue(op3Type)) {
+                const maxValue = args[0] === args[1] ? 255 : 7;
+                if (isOutOfRange(args[2], maxValue)) {
+                  return (
+                    'Invalid inmediate for ADD. Number out of range. Expected 0-' + maxValue + ' but got ' + args[2]
+                  );
                 }
-              } else if (!isGeneralReg(op3Type) && op3Type !== OperandType.SpRegister) {
-                return 'Invalid operand 3 for ADD. Expected r[0-15], sp or #8bit_Inm, got ' + operands[2];
+              } else if (!isLowHighRegister(op3Type) && op3Type !== OperandType.SpRegister) {
+                return 'Invalid operand 3 for ADD. Expected r[0-15], sp or #8bit_Inm, got ' + args[2];
               }
             } else if (op2Type === OperandType.SpRegister) {
-              if (isInmediateVal(op3Type)) {
-                const radix = op3Type === OperandType.HexInmediate ? 16 : 10;
-                const value = parseInt(operands[2].slice(1), radix);
-                if (value < 0 || value > 1020) {
-                  return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + value;
+              if (isInmediateValue(op3Type)) {
+                if (isOutOfRange(args[2], 1020)) {
+                  return 'Invalid inmediate for ADD. Number out of range. Expected 0-1020 but got ' + args[2];
                 }
               } else {
-                return 'Invalid operand 3 for ADD. Expected #Inm, got ' + operands[2];
+                return 'Invalid operand 3 for ADD. Expected #Inm, got ' + args[2];
               }
             } else if (op2Type !== OperandType.HighRegister) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + operands[1];
+              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
             }
 
             // CASE: ADD r1, r2, [#0xFF | r3]
             return {
               operation: Operation.ADD,
+              name: 'add',
               operands: [
-                { type: op1Type, value: operands[0] },
-                { type: op2Type, value: operands[1] },
-                { type: op3Type, value: operands[2] },
+                { type: op1Type, value: args[0] },
+                { type: op2Type, value: args[1] },
+                { type: op3Type, value: args[2] },
               ],
             };
 
           case OperandType.HighRegister:
-            if (!isGeneralReg(op2Type) && op2Type !== OperandType.SpRegister) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + operands[1];
-            } else if (!isGeneralReg(op3Type)) {
-              return 'Invalid operand 3 for ADD. Expected r[0-15], got ' + operands[2];
+            if (!isLowHighRegister(op2Type) && op2Type !== OperandType.SpRegister) {
+              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
+            } else if (!isLowHighRegister(op3Type)) {
+              return 'Invalid operand 3 for ADD. Expected r[0-15], got ' + args[2];
             }
 
             return {
               operation: Operation.ADD,
+              name: 'add',
               operands: [
-                { type: op1Type, value: operands[0] },
-                { type: op2Type, value: operands[1] },
-                { type: op3Type, value: operands[2] },
+                { type: op1Type, value: args[0] },
+                { type: op2Type, value: args[1] },
+                { type: op3Type, value: args[2] },
               ],
             };
 
           case OperandType.SpRegister:
-            if (!isGeneralReg(op2Type) && op2Type !== OperandType.SpRegister) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + operands[1];
-            } else if (isInmediateVal(op3Type)) {
-              const radix = op3Type === OperandType.HexInmediate ? 16 : 10;
-              const value = parseInt(operands[2].slice(1), radix);
-              if (value < 0 || value > 508) {
-                return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + value;
+            if (!isLowHighRegister(op2Type) && op2Type !== OperandType.SpRegister) {
+              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
+            } else if (isInmediateValue(op3Type)) {
+              if (isOutOfRange(args[2], 508)) {
+                return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + args[2];
               }
-            } else if (!isGeneralReg(op3Type)) {
-              return 'Invalid operand 3 for ADD. Expected r[0-15] or #Inm, got ' + operands[2];
+            } else if (!isLowHighRegister(op3Type)) {
+              return 'Invalid operand 3 for ADD. Expected r[0-15] or #Inm, got ' + args[2];
             }
 
             return {
               operation: Operation.ADD,
+              name: 'add',
               operands: [
-                { type: op1Type, value: operands[0] },
-                { type: op2Type, value: operands[1] },
-                { type: op3Type, value: operands[2] },
+                { type: op1Type, value: args[0] },
+                { type: op2Type, value: args[1] },
+                { type: op3Type, value: args[2] },
               ],
             };
 
           default:
-            return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + operands[0];
+            return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0];
         }
       }
     }
@@ -342,12 +303,12 @@ function compile_text_section(textSection: string): Program {
       continue;
     }
 
-    let label = '';
+    let label: string | undefined;
     if (/^\w+:/.test(line)) {
       // A label exists in this line
       label = line.split(':')[0];
       line = line.slice(label.length + 1).trim();
-      if (line.length === 0) {
+      while (line.length === 0) {
         // The line is just a label, parse next line
         line = lines[++i];
       }
@@ -402,5 +363,4 @@ function compile_assembly(source: string): Program {
 }
 
 export default compile_assembly;
-export { Operation, OperandType, assert, wordToOperation, operationToWord };
-export type { Instruction };
+export { assert };
