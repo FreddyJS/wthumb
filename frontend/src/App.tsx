@@ -31,7 +31,7 @@ const codeExample =
   mov r0, #2    @ r0 = 2
   add r0, #1    @ r0 = 3
   add sp, #8    @ sp = sp + 8
-  add sp, #-4   @ sp = sp - 4 = 4
+  add sp, #4   @ sp = sp + 4 = 12
 
   mov r1, #0x2  @ r1 = 2
   add r1, r1    @ r1 = 4

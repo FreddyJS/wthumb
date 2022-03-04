@@ -3,7 +3,7 @@ import "./program.scss";
 
 import { Table } from "react-bootstrap";
 
-import { operationToWord, Instruction } from "emulator/compiler";
+import { Instruction } from "emulator/types";
 import { selectProgram } from "reducers/cpuReducer";
 
 const Program = () => {
@@ -19,6 +19,7 @@ const Program = () => {
           <thead>
             <tr>
               <th>#</th>
+              <th>Label</th>
               <th>Value</th>
             </tr>
           </thead>
@@ -27,17 +28,10 @@ const Program = () => {
               <tr key={index}>
                 <td>0x{(index*2).toString(16).padStart(2, '0')}</td>
                 <td>
-                  <table style={{ width: "100%"}}>
-                    <tbody>
-                      <tr>
-                        <td>{ins.label}</td>
-                        <td>{operationToWord[ins.operation]}</td>
-                        {ins.operands.map((operand, index) => (
-                          <td key={index}>{operand.value}{index !== ins.operands.length -1 ? ',' : ''}</td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
+                  {ins.label}
+                </td>
+                <td style={{ textAlign: "left", paddingLeft: "5%"}}>
+                  {ins.name + " " + ins.operands.map(op => op.value).join(", ")}
                 </td>
               </tr>
             ))}

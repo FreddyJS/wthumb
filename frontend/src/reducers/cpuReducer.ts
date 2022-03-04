@@ -40,7 +40,7 @@ export const cpuSlice = createSlice({
         state.error = program.error.message;
       } else {
         state.cpu.reset();
-        state.cpu.load(program.ins);
+        state.cpu.load(program);
         state.cpu.run();
         state.error = undefined;
       }

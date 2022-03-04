@@ -57,7 +57,8 @@ function mkArmThumb() {
   registers.r15 = registers.pc;
 
   custom.push(function(ch: any, stream: any) {
-    return null;
+    stream.eatWhile(/\S/);
+    return 'invalid';
   });
 
   function nextUntilUnescaped(stream: any, end: any) {
@@ -105,7 +106,10 @@ function mkArmThumb() {
       if (ch === '.') {
         stream.eatWhile(/\w/);
         cur = stream.current().toLowerCase();
-        return directives[cur];
+        style = directives[cur];
+        if (style) {
+          return style;
+        }
       }
 
       // Separator ,
@@ -119,9 +123,9 @@ function mkArmThumb() {
         if (stream.eat("0") && stream.eat("x")) {
           stream.eatWhile(/[0-9a-fA-F]/);
           return "number";
+        } else if (stream.eatWhile(/\d/)) {
+          return "number";
         }
-        stream.eatWhile(/\d/);
-        return "number";
       }
 
       // CPU Registers
@@ -130,8 +134,12 @@ function mkArmThumb() {
         cur = stream.current().toLowerCase();
         if (registers[cur]) {
           return registers[cur];
-        } else {
-          return "invalid";
+        }
+      } else if (ch === 's') {
+        stream.eatWhile(/\w/);
+        cur = stream.current().toLowerCase();
+        if (cur === 'sp') {
+          return registers.sp;
         }
       }
 
@@ -144,8 +152,6 @@ function mkArmThumb() {
         } else if (keywords[cur]) {
           return 'keyword';
         }
-
-        return null;
       }
 
       // Execute custom parsing function if it exists
