@@ -5,9 +5,10 @@ import './App.scss';
 import logo from './logo.svg';
 
 // Bootstrap Components
-import Alert from 'react-bootstrap/Alert';
 import Navbar from 'react-bootstrap/Navbar';
-import Button from 'react-bootstrap/esm/Button';
+import Button from 'react-bootstrap/Button';
+import Toast from 'react-bootstrap/Toast';
+import ToastContainer from 'react-bootstrap/ToastContainer';
 
 // Self defined Components
 import Memory from './components/Memory';
@@ -85,9 +86,26 @@ function App() {
             <Button variant="outline-primary">Clear Memory</Button>
           </div>
           <p></p>
-          <div>{error !== undefined ? <Alert variant='danger' style={{textAlign: "left"}}>{error.split("\n").map((line: string) => <p>{line}</p>)}</Alert> : ''}</div>
+          <div>{error !== undefined ? 
+            <ToastContainer position="top-end" className="p-3">
+              <Toast bg="danger">
+                <Toast.Header>
+                  <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
+                  <strong className="me-auto">Asembler Error</strong>
+                  <small className="text-muted">just now</small>
+                  </Toast.Header>
+                <Toast.Body>
+                  {error.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
+                    return <div style={{ textAlign: "left" }} key={index}>{line}</div>
+                  })}
+                </Toast.Body>
+              </Toast>
+            </ToastContainer>
+            : null}
+          </div>
         </div>
         <div className='content-code'>
+          
           <Program/>
           <CodeEditor value={code} placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
           <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
