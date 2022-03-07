@@ -6,9 +6,8 @@ import Badge from "react-bootstrap/Badge";
 
 const Registers = () => {
   const regs = useAppSelector(state => state.cpu.cpu.regs);
-  const sp = useAppSelector(state => state.cpu.cpu.sp);
   const regs_n = Object.keys(regs).length;
-  const regs_per_row = 3;
+  const regs_per_row = 4;
 
   const registers_row = (first: number, last: number) => {
     let row: JSX.Element[] = [];
@@ -37,14 +36,6 @@ const Registers = () => {
       rows.push(
         <div className="registers-row" key={i}>
           {registers_row(first, last)}
-          {i === total_rows - 1 ? 
-            <Button key={sp} variant="outline-primary" className="registers-item">
-              <div className="registers-item-name">SP</div>
-              <div>
-                <Badge bg="primary" className="registers-item-value">0x{sp.toString(16).padStart(8, '0')}</Badge>
-              </div>
-            </Button>
-          : null}
         </div>
       );
     }

@@ -17,7 +17,7 @@ import Registers from 'components/Registers';
 import CodeEditor from './components/CodeEditor';
 
 // Emulator
-import { runCode, setError, updateProgram } from './reducers/cpuReducer';
+import { runCode, step, setError, updateProgram, reset } from './reducers/cpuReducer';
 
 import axios from 'axios';
 
@@ -75,6 +75,24 @@ function App() {
         </Navbar.Brand>
       </Navbar>
 
+      {error !== undefined ? 
+        <ToastContainer position="top-end" className="p-3">
+          <Toast bg="danger">
+            <Toast.Header>
+              <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
+              <strong className="me-auto">Asembler Error</strong>
+              <small className="text-muted">Line {error.line}</small>
+            </Toast.Header>
+            <Toast.Body>
+              {error.message.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
+                return <div style={{ textAlign: "left" }} key={index}>{line}</div>
+              })}
+            </Toast.Body>
+          </Toast>
+        </ToastContainer>
+      : null
+      }
+
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
@@ -83,29 +101,12 @@ function App() {
           <div>
             <Button variant="outline-primary" onClick={startEmul}>Run</Button>
             <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
-            <Button variant="outline-primary">Clear Memory</Button>
-          </div>
-          <p></p>
-          <div>{error !== undefined ? 
-            <ToastContainer position="top-end" className="p-3">
-              <Toast bg="danger">
-                <Toast.Header>
-                  <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
-                  <strong className="me-auto">Asembler Error</strong>
-                  <small className="text-muted">just now</small>
-                  </Toast.Header>
-                <Toast.Body>
-                  {error.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
-                    return <div style={{ textAlign: "left" }} key={index}>{line}</div>
-                  })}
-                </Toast.Body>
-              </Toast>
-            </ToastContainer>
-            : null}
+            <Button variant="outline-primary" onClick={() => {dispatch(step())}}>Step</Button>
+            <Button variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset</Button>
           </div>
         </div>
-        <div className='content-code'>
-          
+
+        <div className='content-code'>          
           <Program/>
           <CodeEditor value={code} placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
           <div style={{display: "flex", flexDirection: "column", height: "100%"}}>

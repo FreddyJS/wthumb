@@ -8,6 +8,7 @@ import { selectProgram } from "reducers/cpuReducer";
 
 const Program = () => {
   const program = useAppSelector(selectProgram)
+  const pc = useAppSelector(state => state.cpu.cpu.regs["r15"])
 
   return (
     <div className="program">
@@ -20,12 +21,12 @@ const Program = () => {
             <tr>
               <th>#</th>
               <th>Label</th>
-              <th>Value</th>
+              <th>Instruction</th>
             </tr>
           </thead>
           <tbody>
             {program.map((ins: Instruction, index: number) => (
-              <tr key={index}>
+              <tr key={index} style={index*2 === pc ? { backgroundColor: "#c3e6cb" } : {}}>
                 <td>0x{(index*2).toString(16).padStart(2, '0')}</td>
                 <td>
                   {ins.label}

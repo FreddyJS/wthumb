@@ -44,5 +44,13 @@ type Program = {
   ins: Instruction[];
 };
 
-export { Operation, OperandType, wordToOperation, operationToWord };
+function isLowHighRegister(type: OperandType): boolean {
+  return type === OperandType.LowRegister || type === OperandType.HighRegister;
+}
+
+function isInmediateValue(type: OperandType): boolean {
+  return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
+}
+
+export { Operation, OperandType, wordToOperation, operationToWord, isLowHighRegister, isInmediateValue };
 export type { CompilerError, Operand, Instruction, Program };

@@ -1,6 +1,6 @@
 import compile_assembly, { assert } from './compiler';
 
-import { Operation, OperandType, Program } from './types';
+import { Operation, OperandType, Program, isLowHighRegister, isInmediateValue } from './types';
 import type { Instruction } from './types';
 
 const defaultMemorySize = 64;
@@ -32,10 +32,12 @@ enum Flags {
   V = 0x10000000,
 }
 
+const SPREGISTER = 'r13';
+// const LRREGISTER = 'r14';
+const PCREGISTER = 'r15';
+
 type armCPU_T = {
   regs: { [key: string]: number };
-  pc: number;
-  sp: number;
   cpsr: number;
   memory: number[];
   stack: number[];
@@ -56,11 +58,9 @@ type cpuProps = {
   stackSize?: number;
 };
 
-function defaultCPU(props: cpuProps = {memorySize: defaultMemorySize, stackSize: defaultStackSize}): armCPU_T {
+function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize: defaultStackSize }): armCPU_T {
   const armCPU: armCPU_T = {
     regs: { ...defaultRegs },
-    pc: 0,
-    sp: 0,
     cpsr: 0,
     memory: new Array(props.memorySize).fill(0),
     stack: new Array(props.stackSize).fill(0),
@@ -70,19 +70,18 @@ function defaultCPU(props: cpuProps = {memorySize: defaultMemorySize, stackSize:
     run() {
       for (const ins of this.program) {
         this.execute(ins);
+        this.regs[PCREGISTER] += 2;
       }
     },
     step() {
-      this.execute(this.program[this.pc]);
-      this.pc++;
+      this.execute(this.program[this.regs[PCREGISTER] / 2]);
+      this.regs[PCREGISTER] += 2;
     },
     reset() {
       this.regs = { ...defaultRegs };
       this.memory = new Array(defaultMemorySize).fill(0);
       this.stack = new Array(defaultStackSize).fill(0);
       this.program = [];
-      this.pc = 0;
-      this.sp = 0;
     },
     load(program: Program) {
       // TODO: Copy the program memory to the CPU memory
@@ -101,14 +100,21 @@ function defaultCPU(props: cpuProps = {memorySize: defaultMemorySize, stackSize:
         case Operation.MOV:
           {
             const [op1, op2] = ins.operands;
-            const value =
-              op2.type === OperandType.LowRegister || op2.type === OperandType.HighRegister
-                ? this.regs[op2.value]
-                : op2.type === OperandType.HexInmediate
-                ? parseInt(op2.value.slice(1), 16)
-                : parseInt(op2.value.slice(1), 10);
+            const value = isLowHighRegister(op2.type)
+              ? this.regs[op2.value]
+              : op2.type === OperandType.HexInmediate
+              ? parseInt(op2.value.slice(1), 16)
+              : parseInt(op2.value.slice(1), 10);
 
             this.regs[op1.value] = value;
+            if (
+              (op1.type === OperandType.LowRegister && op2.type === OperandType.LowRegister) ||
+              isInmediateValue(op2.type)
+            ) {
+              this.set_flag(Flags.Z, value === 0);
+              // tslint:disable-next-line:no-bitwise
+              this.set_flag(Flags.N, (value & 0x80000000) !== 0);
+            }
           }
           break;
 
@@ -116,35 +122,31 @@ function defaultCPU(props: cpuProps = {memorySize: defaultMemorySize, stackSize:
           {
             // TODO: Add support for other types of registers (pc, sp)
             const [op1, op2, op3] = ins.operands;
-            const destReg = op1.value;
+            const destReg = op1.type === OperandType.SpRegister ? 'r13' : op1.value;
 
             const sum1 =
               op3 === undefined
                 ? op1.type === OperandType.SpRegister
-                  ? this.sp
+                  ? this.regs[SPREGISTER]
                   : this.regs[op1.value]
                 : op2.type === OperandType.SpRegister
-                ? this.sp
+                ? this.regs[SPREGISTER]
                 : this.regs[op2.value];
 
             const sum2 =
               op3 === undefined
-                ? op2.type === OperandType.HexInmediate || op2.type === OperandType.DecInmediate
+                ? isInmediateValue(op2.type)
                   ? parseInt(op2.value.slice(1), op2.type === OperandType.HexInmediate ? 16 : 10)
                   : op2.type === OperandType.SpRegister
-                  ? this.sp
+                  ? this.regs[SPREGISTER]
                   : this.regs[op2.value]
-                : op3.type === OperandType.HexInmediate || op3.type === OperandType.DecInmediate
+                : isInmediateValue(op3.type)
                 ? parseInt(op3.value.slice(1), op3.type === OperandType.HexInmediate ? 16 : 10)
                 : op3.type === OperandType.SpRegister
-                ? this.sp
+                ? this.regs[SPREGISTER]
                 : this.regs[op3.value];
 
-            if (destReg === 'sp') {
-              this.sp = sum1 + sum2;
-            } else {
-              this.regs[destReg] = sum1 + sum2;
-            }
+            this.regs[destReg] = sum1 + sum2;
           }
           break;
 

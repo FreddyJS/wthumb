@@ -1,4 +1,4 @@
-import { Operation, OperandType, wordToOperation } from './types';
+import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue } from './types';
 import type { Program, Instruction } from './types';
 
 const assert = (condition: boolean, message: string) => {
@@ -6,14 +6,6 @@ const assert = (condition: boolean, message: string) => {
     throw new Error(message);
   }
 };
-
-function isLowHighRegister(type: OperandType): boolean {
-  return type === OperandType.LowRegister || type === OperandType.HighRegister;
-}
-
-function isInmediateValue(type: OperandType): boolean {
-  return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
-}
 
 function isOutOfRange(inmediate: string, max: number): boolean {
   const radix = inmediate.startsWith('#0x') ? 16 : 10;
@@ -290,7 +282,7 @@ function lineToInstruction(line: string): Instruction | string {
   }
 }
 
-function compile_text_section(textSection: string): Program {
+function compile_text_section(textSection: string, startLine: number): Program {
   const labels: { [key: string]: number } = {};
   const lines = textSection.split('\n');
   const program: Program = {
@@ -310,9 +302,9 @@ function compile_text_section(textSection: string): Program {
       label = line.split(':')[0];
       if (labels[label] !== undefined) {
         program.error = {
-          line: i + 1,
+          line: i + startLine,
           message: 'The symbol `' + label + '` is already defined',
-        }
+        };
         return program;
       }
 
@@ -327,7 +319,7 @@ function compile_text_section(textSection: string): Program {
     const op = lineToInstruction(line);
     if (typeof op === 'string') {
       program.error = {
-        line: i + 1,
+        line: i + startLine,
         message: op,
       };
 
@@ -366,7 +358,7 @@ function compile_assembly(source: string): Program {
   textSection = cleanInput(textSection);
   dataSection = cleanInput(dataSection);
 
-  const program: Program = compile_text_section(textSection);
+  const program: Program = compile_text_section(textSection, source.substring(0, textSectionIndex).split('\n').length);
   void dataSection;
 
   return program;
