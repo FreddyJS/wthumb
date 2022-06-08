@@ -1,6 +1,6 @@
-import compile_assembly, { assert } from './compiler';
+import compile_assembly, { assert, parseInmediate } from './compiler';
 
-import { Operation, OperandType, Program, isLowHighRegister, isInmediateValue } from './types';
+import { Operation, OperandType, Program, isInmediateValue } from './types';
 import type { Instruction } from './types';
 
 const defaultMemorySize = 64;
@@ -32,7 +32,7 @@ enum Flags {
   V = 0x10000000,
 }
 
-const SPREGISTER = 'r13';
+// const SPREGISTER = 'r13';
 // const LRREGISTER = 'r14';
 const PCREGISTER = 'r15';
 
@@ -74,6 +74,11 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       }
     },
     step() {
+      if (this.regs[PCREGISTER] / 2 >= this.program.length) {
+        console.log('Program finished');
+        return;
+      }
+
       this.execute(this.program[this.regs[PCREGISTER] / 2]);
       this.regs[PCREGISTER] += 2;
     },
@@ -95,18 +100,15 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.program = compiled.ins;
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 2, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 4, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
             const [op1, op2] = ins.operands;
-            const value = isLowHighRegister(op2.type)
-              ? this.regs[op2.value]
-              : op2.type === OperandType.HexInmediate
-              ? parseInt(op2.value.slice(1), 16)
-              : parseInt(op2.value.slice(1), 10);
+            const destReg = op1.value;
+            const value = isInmediateValue(op2.type) ? parseInmediate(op2) : this.regs[op2.value];
 
-            this.regs[op1.value] = value;
+            this.regs[destReg] = value;
             if (
               (op1.type === OperandType.LowRegister && op2.type === OperandType.LowRegister) ||
               isInmediateValue(op2.type)
@@ -122,31 +124,42 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           {
             // TODO: Add support for other types of registers (pc, sp)
             const [op1, op2, op3] = ins.operands;
-            const destReg = op1.type === OperandType.SpRegister ? 'r13' : op1.value;
+            const destReg = op1.value;
 
-            const sum1 =
-              op3 === undefined
-                ? op1.type === OperandType.SpRegister
-                  ? this.regs[SPREGISTER]
-                  : this.regs[op1.value]
-                : op2.type === OperandType.SpRegister
-                ? this.regs[SPREGISTER]
-                : this.regs[op2.value];
-
-            const sum2 =
-              op3 === undefined
-                ? isInmediateValue(op2.type)
-                  ? parseInt(op2.value.slice(1), op2.type === OperandType.HexInmediate ? 16 : 10)
-                  : op2.type === OperandType.SpRegister
-                  ? this.regs[SPREGISTER]
-                  : this.regs[op2.value]
-                : isInmediateValue(op3.type)
-                ? parseInt(op3.value.slice(1), op3.type === OperandType.HexInmediate ? 16 : 10)
-                : op3.type === OperandType.SpRegister
-                ? this.regs[SPREGISTER]
-                : this.regs[op3.value];
+            const sum1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
+            const sum2 = op3 === undefined ?
+              isInmediateValue(op2.type) ? parseInmediate(op2) : this.regs[op2.value]
+              :
+              isInmediateValue(op3.type) ? parseInmediate(op3) : this.regs[op3.value];
 
             this.regs[destReg] = sum1 + sum2;
+          }
+          break;
+
+        case Operation.SUB:
+          {
+            const [op1, op2, op3] = ins.operands;
+            const destReg = op1.value;
+
+            const res1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
+            const res2 = op3 === undefined ?
+              isInmediateValue(op2.type) ? parseInmediate(op2) : this.regs[op2.value]
+              :
+              isInmediateValue(op3.type) ? parseInmediate(op3) : this.regs[op3.value];
+
+            this.regs[destReg] = res1 - res2;
+          }
+          break;
+
+        case Operation.MUL:
+          {
+            const [op1, op2, op3] = ins.operands;
+            const destReg = op1.value;
+
+            const mul1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
+            const mul2 = op3 === undefined ? this.regs[op2.value] : this.regs[op3.value];
+
+            this.regs[destReg] = mul1 * mul2;
           }
           break;
 

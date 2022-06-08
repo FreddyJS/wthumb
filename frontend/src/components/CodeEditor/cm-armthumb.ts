@@ -27,6 +27,8 @@ function mkArmThumb() {
   var keywords: { [key: string]: string } = {
     "mov": "keyword",
     "add": "keyword",
+    "sub": "keyword",
+    "mul": "keyword",
   }
 
   var registers: { [key: string]: string } = {};
