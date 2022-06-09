@@ -1,11 +1,10 @@
 import "./code-editor.scss";
 
 import CodeMirror from '@uiw/react-codemirror';
-import { StreamLanguage } from '@codemirror/stream-parser';
+import { StreamLanguage } from '@codemirror/language';
 
 // Custom code mirror mode only for arm thumb
-import gasArmThumb from './cm-armthumb';
-
+import { armthumb } from './armthumb';
 
 type CodeEditorProps = {
   value?: string;
@@ -26,7 +25,7 @@ const CodeEditor = ({ value, placeHolder, onChange }: CodeEditorProps) => {
           height: "100%",
           overflow: "auto"
         }}
-        extensions={[StreamLanguage.define(gasArmThumb)]}
+        extensions={[StreamLanguage.define(armthumb)]}
         onChange={(value, viewUpdate) => {
           onChange(value);
         }}

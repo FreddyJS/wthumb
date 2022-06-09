@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@codemirror/legacy-modes": "^0.19.0",
-    "@codemirror/stream-parser": "^0.19.6",
+    "@codemirror/language": "0.20.2",
     "@reduxjs/toolkit": "^1.7.2",
     "@testing-library/dom": "^8.11.3",
     "@testing-library/jest-dom": "^5.14.1",
