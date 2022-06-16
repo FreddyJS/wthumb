@@ -7,7 +7,7 @@ const assert = (condition: boolean, message: string) => {
   }
 };
 
-function parseInmediate(operand: Operand): number {
+function parseInmediateOperand(operand: Operand): number {
   const radix = operand.value.startsWith('#0x') ? 16 : 10;
   return parseInt(operand.value.slice(1), radix);
 }
@@ -77,7 +77,7 @@ function lineToInstruction(line: string): Instruction | string {
     return 'Unknown operation: ' + words[0];
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 4, 'Exhaustive handling of operations in line_to_op');
+  assert(Operation.TOTAL_OPERATIONS === 6, 'Exhaustive handling of operations in line_to_op');
   switch (operation) {
     case Operation.MOV: {
       if (args.length !== 2) {
@@ -464,6 +464,60 @@ function lineToInstruction(line: string): Instruction | string {
       }
     }
 
+    case Operation.CMP: {
+      if (args.length != 2) {
+        return "Invalid number of arguments for CMP. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for CMP. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined) {
+        return 'Invalid operand 2 for CMP. Expected register r[0-15] or #Inm8, got ' + args[1];
+      }
+
+      if (isInmediateValue(op2Type) && isOutOfRange(args[1], 255)) {
+        return 'Invalid inmediate for CMP. Number out of range. Expected 0-255 but got ' + args[1];
+      }
+
+      // CASE: cmp r1, [r2 | #Inm8]
+      return {
+        operation: Operation.CMP,
+        name: 'cmp',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.CMN: {
+      if (args.length != 2) {
+        return "Invalid number of arguments for CMP. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for CMN. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for CMN. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: cmn r1, r2
+      return {
+        operation: Operation.CMN,
+        name: 'cmn',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
     default:
       throw new Error('Unreachable code in line_to_op');
   }
@@ -552,4 +606,4 @@ function compile_assembly(source: string): Program {
 }
 
 export default compile_assembly;
-export { assert, parseInmediate };
+export { assert, parseInmediateOperand };

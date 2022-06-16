@@ -1,4 +1,4 @@
-import compile_assembly, { assert, parseInmediate } from './compiler';
+import compile_assembly, { assert, parseInmediateOperand } from './compiler';
 
 import { Operation, OperandType, Program, isInmediateValue } from './types';
 import type { Instruction } from './types';
@@ -26,10 +26,10 @@ const defaultRegs = {
 };
 
 enum Flags {
-  N = 0x80000000,
-  Z = 0x40000000,
-  C = 0x20000000,
-  V = 0x10000000,
+  N,
+  Z,
+  C,
+  V
 }
 
 // const SPREGISTER = 'r13';
@@ -38,7 +38,10 @@ const PCREGISTER = 'r15';
 
 type armCPU_T = {
   regs: { [key: string]: number };
-  cpsr: number;
+  z: boolean;
+  n: boolean;
+  c: boolean;
+  v: boolean;
   memory: number[];
   stack: number[];
   program: Instruction[];
@@ -61,7 +64,10 @@ type cpuProps = {
 function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize: defaultStackSize }): armCPU_T {
   const armCPU: armCPU_T = {
     regs: { ...defaultRegs },
-    cpsr: 0,
+    z: false,
+    n: false,
+    c: false,
+    v: false,
     memory: new Array(props.memorySize).fill(0),
     stack: new Array(props.stackSize).fill(0),
     program: [],
@@ -100,13 +106,13 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.program = compiled.ins;
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 4, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 6, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
             const [op1, op2] = ins.operands;
             const destReg = op1.value;
-            const value = isInmediateValue(op2.type) ? parseInmediate(op2) : this.regs[op2.value];
+            const value = isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value];
 
             this.regs[destReg] = value;
             if (
@@ -128,9 +134,9 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             const sum1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
             const sum2 = op3 === undefined ?
-              isInmediateValue(op2.type) ? parseInmediate(op2) : this.regs[op2.value]
+              isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value]
               :
-              isInmediateValue(op3.type) ? parseInmediate(op3) : this.regs[op3.value];
+              isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
 
             this.regs[destReg] = sum1 + sum2;
           }
@@ -143,9 +149,9 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             const res1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
             const res2 = op3 === undefined ?
-              isInmediateValue(op2.type) ? parseInmediate(op2) : this.regs[op2.value]
+              isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value]
               :
-              isInmediateValue(op3.type) ? parseInmediate(op3) : this.regs[op3.value];
+              isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
 
             this.regs[destReg] = res1 - res2;
           }
@@ -163,17 +169,48 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           }
           break;
 
+        case Operation.CMP:
+          {
+            const [op1, op2] = ins.operands;
+            const cmp1 = this.regs[op1.value];
+            const cmp2 = isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value];
+
+            this.set_flag(Flags.Z, cmp1 === cmp2);
+            this.set_flag(Flags.N, cmp2 > cmp1);
+          }
+          break;
+
+        case Operation.CMN:
+          {
+            const [op1, op2] = ins.operands;
+            const cmp1 = this.regs[op1.value];
+            const cmp2 = isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value];
+
+            this.set_flag(Flags.Z, cmp1 === - cmp2);
+            this.set_flag(Flags.N, cmp1 + cmp2 < 0);
+          }
+          break;
+
         default:
           throw new Error('Invalid operation in execute. This should never happen.');
       }
     },
     set_flag(flag: Flags, value: boolean) {
-      if (value) {
-        // tslint:disable-next-line:no-bitwise
-        this.cpsr |= flag;
-      } else {
-        // tslint:disable-next-line:no-bitwise
-        this.cpsr &= ~flag;
+      switch (flag) {
+        case Flags.Z:
+          this.z = value;
+          break;
+        case Flags.N:
+          this.n = value;
+          break;
+        case Flags.C:
+          this.c = value;
+          break;
+        case Flags.V:
+          this.v = value;
+          break;
+        default:
+          throw new Error('Invalid flag in set_flag. This should never happen.');
       }
     },
   };

@@ -44,3 +44,13 @@
   flex-wrap: wrap;
   height: 80vh;
 }
+
+.menu {
+  display: "flex";
+  flex-direction: "column";
+  margin-bottom: 1rem;
+}
+
+.menu-button {
+  margin: 2px;
+}

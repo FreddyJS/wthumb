@@ -11,13 +11,14 @@ import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 
 // Self defined Components
-import Memory from './components/Memory';
+import Memory from 'components/Memory';
 import Program from 'components/Program';
 import Registers from 'components/Registers';
-import CodeEditor from './components/CodeEditor';
+import CodeEditor from 'components/CodeEditor';
+import Help from 'components/Help';
 
 // Emulator
-import { runCode, step, setError, updateProgram, reset } from './reducers/cpuReducer';
+import { runCode, step, setError, updateProgram, reset } from 'reducers/cpuReducer';
 
 import axios from 'axios';
 
@@ -26,23 +27,25 @@ axios.interceptors.response.use(undefined, function axiosException(err) {
 })
 
 const codeExample = 
-`@ This a simple example in arm thumb!
+`; This a simple example in arm thumb!
 
-.text @ Start of .text section. This is where the code will be placed.
-  mov r0, #2    @ r0 = 2
-  add r0, #1    @ r0 = 3
-  add sp, #8    @ sp = sp + 8
-  add sp, #4   @ sp = sp + 4 = 12
+.text ; Start of .text section. This is where the code will be placed.
+  mov r0, #2    ; r0 = 2
+  add r0, #1    ; r0 = 3
+  add sp, #8    ; sp = sp + 8
+  add sp, #4    ; sp = sp + 4 = 12
 
-  mov r1, #0x2  @ r1 = 2
-  add r1, r1    @ r1 = 4
-  mov r9, r1    @ r9 = 4
-  mov r8, r9    @ r8 = 4`;
+  mov r1, #0x2  ; r1 = 2
+  add r1, r1    ; r1 = 4
+  mov r9, r1    ; r9 = 4
+  mov r8, r9    ; r8 = 4`
+;
 
 function App() {
   const [code, setCode] = useState(codeExample);
   const error = useAppSelector((state) => state.cpu.error);
   const dispatch = useAppDispatch();
+  const [showHelp, setShowHelp] = useState(false);
 
   const startEmul = async () => {
     try {
@@ -96,13 +99,14 @@ function App() {
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
         <p></p>
-        <div style={{display: "flex", flexDirection: "column"}}>
-          <p>Lines of code: {code.split("\n").length}</p>
+        <div className="menu">
           <div>
-            <Button variant="outline-primary" onClick={startEmul}>Run</Button>
-            <Button variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
-            <Button variant="outline-primary" onClick={() => {dispatch(step())}}>Step</Button>
-            <Button variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={startEmul}>Run</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(step())}}>Step</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>Help</Button>
+            <Help show={showHelp} onClose={() => setShowHelp(false)}/>
           </div>
         </div>
 

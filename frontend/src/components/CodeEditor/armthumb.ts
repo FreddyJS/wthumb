@@ -10,7 +10,8 @@ var custom: any[] = [];
 // architecture.
 // If no architecture is pased in "parserConfig" then only multiline
 // comments will have syntax support.
-var lineCommentStartSymbol = "@";
+var lineCommentStartSymbol = ";";
+var secLineCommentStartSymbol = "@"
 
 // These directives are architecture independent.
 // Machine specific directives should go in their respective
@@ -92,7 +93,7 @@ export const armthumb: any = {
     var style, cur, ch = stream.next();
 
     // Single line comment
-    if (ch === lineCommentStartSymbol) {
+    if (ch === lineCommentStartSymbol || ch === secLineCommentStartSymbol) {
       stream.skipToEnd();
       return "comment";
     }
