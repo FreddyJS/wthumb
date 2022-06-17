@@ -98,11 +98,10 @@ function App() {
 
       <div className="content">
         {/* Here we should change between different modes, for now lets just put a text editor*/}
-        <p></p>
         <div className="menu">
           <div>
             <Button className="menu-button" variant="outline-primary" onClick={startEmul}>Run</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(updateProgram(code))}}>Load Program</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset()); dispatch(updateProgram(code))}}>Load Program</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(step())}}>Step</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>Help</Button>
@@ -113,7 +112,7 @@ function App() {
         <div className='content-code'>          
           <Program/>
           <CodeEditor value={code} placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
+          <div style={{display: "flex", flexDirection: "column", flex: "1 0 auto", height: "100%"}}>
             <Registers/>
             <Memory/>
           </div>

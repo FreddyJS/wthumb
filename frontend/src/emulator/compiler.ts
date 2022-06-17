@@ -465,7 +465,7 @@ function lineToInstruction(line: string): Instruction | string {
     }
 
     case Operation.CMP: {
-      if (args.length != 2) {
+      if (args.length !== 2) {
         return "Invalid number of arguments for CMP. Expected 2, got " + args.length;
       }
 
@@ -494,7 +494,7 @@ function lineToInstruction(line: string): Instruction | string {
     }
 
     case Operation.CMN: {
-      if (args.length != 2) {
+      if (args.length !== 2) {
         return "Invalid number of arguments for CMP. Expected 2, got " + args.length;
       }
 

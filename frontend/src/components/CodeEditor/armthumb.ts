@@ -122,7 +122,9 @@ export const armthumb: any = {
 
     // Hexadecimal and decimal numbers. #0xff | #255
     if (ch === "#") {
-      if (stream.eat("0") && stream.eat("x")) {
+      if (stream.match("0x")) {
+        stream.eat("0");
+        stream.eat("x");
         stream.eatWhile(/[0-9a-fA-F]/);
         return "number";
       } else if (stream.eatWhile(/\d/)) {

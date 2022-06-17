@@ -6,6 +6,10 @@ import Badge from "react-bootstrap/Badge";
 
 const Registers = () => {
   const regs = useAppSelector(state => state.cpu.cpu.regs);
+  const z = useAppSelector(state => state.cpu.cpu.z);
+  const n = useAppSelector(state => state.cpu.cpu.n);
+  const c = useAppSelector(state => state.cpu.cpu.c);
+  const v = useAppSelector(state => state.cpu.cpu.v);
   const regs_n = Object.keys(regs).length;
   const regs_per_row = 4;
 
@@ -45,8 +49,14 @@ const Registers = () => {
   return (
     <div className="registers">
       <h3>Registers</h3>
-      <div className="registers-container">
-        {registers_rows()}
+      
+      {registers_rows()}
+
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-evenly", width: "100%" }}>
+        <h3 style={{ color: z ? "red" : "gray" }}>Z</h3>
+        <h3 style={{ color: n ? "red" : "gray" }}>N</h3>
+        <h3 style={{ color: c ? "red" : "gray" }}>C</h3>
+        <h3 style={{ color: v ? "red" : "gray" }}>V</h3>
       </div>
     </div>
   );
