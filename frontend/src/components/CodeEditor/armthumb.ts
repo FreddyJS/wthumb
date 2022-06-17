@@ -28,7 +28,10 @@ var keywords: { [key: string]: string } = {
   "mov": "keyword",
   "add": "keyword",
   "sub": "keyword",
+  "neg": "keyword",
   "mul": "keyword",
+  "cmp": "keyword",
+  "cmn": "keyword",
 }
 
 var registers: { [key: string]: string } = {};

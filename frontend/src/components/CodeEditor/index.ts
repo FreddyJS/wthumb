@@ -1,2 +1,2 @@
-import CodeEditor2 from './CodeEditor';
-export default CodeEditor2;
+import CodeEditor from './CodeEditor';
+export default CodeEditor;

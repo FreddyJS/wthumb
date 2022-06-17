@@ -19,9 +19,7 @@ const Registers = () => {
       row.push(
         <Button key={i} variant="outline-primary" className="registers-item">
           <div className="registers-item-name">R{i}</div>
-          <div>
-            <Badge bg="primary" className="registers-item-value">0x{regs[`r${i}`].toString(16).padStart(8, '0')}</Badge>
-          </div>
+          <Badge bg="primary" className="registers-item-value">0x{regs[`r${i}`].toString(16).padStart(8, '0')}</Badge>
         </Button>
       );
     }
