@@ -110,7 +110,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.program = compiled.ins;
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 6, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 7, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
@@ -186,6 +186,21 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           }
           break;
 
+        case Operation.NEG:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+            const value = parseInmediateOperand(op2) === 0 ? 0 : maxUnsignedValue - this.regs[op2.value] + 1;
+            
+            this.regs[destReg] = value;
+
+            this.setFlag(Flags.Z, value === 0);
+            this.setFlag(Flags.C, value === 0);
+            this.setFlag(Flags.N, value > maxPositiveValue);
+            // TODO: V flag
+          }
+          break;
+
         case Operation.MUL:
           {
             const [op1, op2, op3] = ins.operands;
@@ -194,7 +209,14 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const mul1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
             const mul2 = op3 === undefined ? this.regs[op2.value] : this.regs[op3.value];
 
-            this.regs[destReg] = mul1 * mul2;
+            let value = 0;
+            for (let i = 0; i < mul2; i++) {
+              value += mul1;
+              if (value > maxUnsignedValue) {
+                value -= maxUnsignedValue + 1;
+              }
+            }
+            this.regs[destReg] = value;
             this.setFlag(Flags.Z, this.regs[destReg] === 0);
             this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
           }

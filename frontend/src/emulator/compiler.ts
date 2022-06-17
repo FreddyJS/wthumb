@@ -77,7 +77,7 @@ function lineToInstruction(line: string): Instruction | string {
     return 'Unknown operation: ' + words[0];
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 6, 'Exhaustive handling of operations in line_to_op');
+  assert(Operation.TOTAL_OPERATIONS === 7, 'Exhaustive handling of operations in line_to_op');
   switch (operation) {
     case Operation.MOV: {
       if (args.length !== 2) {
@@ -415,6 +415,31 @@ function lineToInstruction(line: string): Instruction | string {
         }
 
       }
+    }
+
+    case Operation.NEG: {
+      if (args.length !== 2) {
+        return 'Invalid number of arguments for NEG. Expected 2, got ' + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for NEG. Expected r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for NEG. Expected r[0-15], got ' + args[1];
+      }
+
+      // CASE: neg r1, r2
+      return {
+        operation: Operation.NEG,
+        name: 'neg',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
     }
 
     case Operation.MUL: {
