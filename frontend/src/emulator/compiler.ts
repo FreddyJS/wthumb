@@ -77,7 +77,7 @@ function lineToInstruction(line: string): Instruction | string {
     return 'Unknown operation: ' + words[0];
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 7, 'Exhaustive handling of operations in line_to_op');
+  assert(Operation.TOTAL_OPERATIONS === 13, 'Exhaustive handling of operations in line_to_op');
   switch (operation) {
     case Operation.MOV: {
       if (args.length !== 2) {
@@ -536,6 +536,150 @@ function lineToInstruction(line: string): Instruction | string {
       return {
         operation: Operation.CMN,
         name: 'cmn',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.AND: {
+      if (args.length !== 2) {
+        return "Invalid number of arguments for AND. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for AND. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for AND. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: and r1, r2
+      return {
+        operation: Operation.AND,
+        name: 'and',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.BIC: {
+      if (args.length !== 2) {
+        return "Invalid number of arguments for BIC. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for BIC. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for BIC. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: bic r1, r2
+      return {
+        operation: Operation.BIC,
+        name: 'bic',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.ORR: {
+      if (args.length !== 2) {
+        return "Invalid number of arguments for ORR. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for ORR. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for ORR. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: orr r1, r2
+      return {
+        operation: Operation.ORR,
+        name: 'orr',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.EOR: {
+      if (args.length !== 2) {
+        return "Invalid number of arguments for EOR. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for EOR. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for EOR. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: eor r1, r2
+      return {
+        operation: Operation.EOR,
+        name: 'eor',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.MVN: {
+      if (args.length !== 2) {
+        return "Invalid number of arguments for MVN. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for MVN. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for MVN. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: mvn r1, r2
+      return {
+        operation: Operation.MVN,
+        name: 'mvn',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.TST: {
+      if (args.length !== 2) {
+        return "Invalid number of arguments for TST. Expected 2, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for TST. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for TST. Expected register r[0-15], got ' + args[1];
+      }
+
+      // CASE: tst r1, r2
+      return {
+        operation: Operation.TST,
+        name: 'tst',
         operands: [
           { type: op1Type, value: args[0] },
           { type: op2Type, value: args[1] },

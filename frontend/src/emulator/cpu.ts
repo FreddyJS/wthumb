@@ -110,7 +110,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.program = compiled.ins;
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 7, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 13, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
@@ -190,8 +190,8 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           {
             const [op1, op2] = ins.operands;
             const destReg = op1.value;
-            const value = parseInmediateOperand(op2) === 0 ? 0 : maxUnsignedValue - this.regs[op2.value] + 1;
-            
+            const value = this.regs[op2.value] === 0 ? 0 : maxUnsignedValue - this.regs[op2.value] + 1;
+
             this.regs[destReg] = value;
 
             this.setFlag(Flags.Z, value === 0);
@@ -246,6 +246,72 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             this.setFlag(Flags.N, cmp1 + cmp2 > maxPositiveValue);
             this.setFlag(Flags.C, cmp1 + cmp2 > maxUnsignedValue);
             this.setFlag(Flags.V, cmp1 <= maxPositiveValue && cmp1 + cmp2 > maxPositiveValue);
+          }
+          break;
+
+        case Operation.AND:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            this.regs[destReg] = this.regs[destReg] & this.regs[op2.value];
+            this.setFlag(Flags.Z, this.regs[destReg] === 0);
+            this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
+          }
+          break;
+
+        case Operation.BIC:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            this.regs[destReg] = this.regs[destReg] & (~this.regs[op2.value] >>> 0);
+            this.setFlag(Flags.Z, this.regs[destReg] === 0);
+            this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
+          }
+          break;
+
+        case Operation.ORR:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            this.regs[destReg] = this.regs[destReg] | this.regs[op2.value];
+            this.setFlag(Flags.Z, this.regs[destReg] === 0);
+            this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
+          }
+          break;
+
+        case Operation.EOR:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            this.regs[destReg] = this.regs[destReg] ^ this.regs[op2.value];
+            this.setFlag(Flags.Z, this.regs[destReg] === 0);
+            this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
+          }
+          break;
+
+        case Operation.MVN:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            this.regs[destReg] = ~this.regs[op2.value] >>> 0;
+            this.setFlag(Flags.Z, this.regs[destReg] === 0);
+            this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
+          }
+          break;
+
+        case Operation.TST:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            const value = this.regs[destReg] & this.regs[op2.value];
+            this.setFlag(Flags.Z, value === 0);
+            this.setFlag(Flags.N, value > maxPositiveValue);
           }
           break;
 

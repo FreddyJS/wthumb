@@ -6,6 +6,12 @@ enum Operation {
   MUL,
   CMP,
   CMN,
+  AND,
+  BIC,
+  ORR,
+  EOR,
+  MVN,
+  TST,
   TOTAL_OPERATIONS,
 }
 
@@ -17,6 +23,12 @@ const wordToOperation: { [key: string]: Operation } = {
   mul: Operation.MUL,
   cmp: Operation.CMP,
   cmn: Operation.CMN,
+  and: Operation.AND,
+  bic: Operation.BIC,
+  orr: Operation.ORR,
+  eor: Operation.EOR,
+  mvn: Operation.MVN,
+  tst: Operation.TST,
 };
 
 const operationToWord: { [key: number]: string } = {
@@ -27,6 +39,12 @@ const operationToWord: { [key: number]: string } = {
   [Operation.MUL]: 'mul',
   [Operation.CMP]: 'cmp',
   [Operation.CMN]: 'cmn',
+  [Operation.AND]: 'and',
+  [Operation.BIC]: 'bic',
+  [Operation.ORR]: 'orr',
+  [Operation.EOR]: 'eor',
+  [Operation.MVN]: 'mvn',
+  [Operation.TST]: 'tst',
 };
 
 enum OperandType {
