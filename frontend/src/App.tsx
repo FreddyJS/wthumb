@@ -97,16 +97,13 @@ function App() {
       }
 
       <div className="content">
-        {/* Here we should change between different modes, for now lets just put a text editor*/}
         <div className="menu">
-          <div>
             <Button className="menu-button" variant="outline-primary" onClick={startEmul}>Run</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset()); dispatch(updateProgram(code))}}>Load Program</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(step())}}>Step</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>Help</Button>
             <Help show={showHelp} onClose={() => setShowHelp(false)}/>
-          </div>
         </div>
 
         <div className='content-code'>          
