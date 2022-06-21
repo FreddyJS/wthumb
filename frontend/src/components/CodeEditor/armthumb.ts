@@ -1,4 +1,4 @@
-import { operationToWord } from "emulator/types";
+import { directiveToWord, operationToWord } from "emulator/types";
 
 // Custom codemirror legacy-mode for a simplified arm thumb
 // Defines rules for the basic keywords, operations and registers
@@ -24,10 +24,12 @@ var directives: { [key: string]: string } = {
   ".text": "meta",
   ".data": "meta",
 };
-directives.syntax = "meta";
+// Fill directives automatically using the directiveToWord object in emulator/types.ts
+for (let i = 0; i < Object.keys(directiveToWord).length; i++) {
+  directives[directiveToWord[i]] = "meta";
+}
 
 var keywords: { [key: string]: string } = {}
-
 // Fill keywords automatically using the operationToWord object in emulator/types.ts
 for (let i = 0; i < Object.keys(operationToWord).length; i++) {
   keywords[operationToWord[i]] = "keyword";
@@ -62,7 +64,7 @@ registers.r15 = registers.pc;
 
 custom.push(function (ch: any, stream: any) {
   stream.eatWhile(/\S/);
-  return 'invalid';
+  return undefined;
 });
 
 function nextUntilUnescaped(stream: any, end: any) {

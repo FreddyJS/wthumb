@@ -4,11 +4,11 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 
-import { wordToOperation } from 'emulator/types';
+import { wordToDirective, wordToOperation } from 'emulator/types';
 type HelpProps = {
     show: boolean;
     onClose: () => void;
-  }
+}
 
 const Help = ({ show, onClose }: HelpProps) => {
     return (
@@ -18,7 +18,8 @@ const Help = ({ show, onClose }: HelpProps) => {
             </Modal.Header>
 
             <Modal.Body>
-                <Table striped bordered hover>
+                <h4>Supported operations</h4>
+                <Table className="help-table" striped bordered hover>
                     <thead>
                         <tr>
                             <th>Instruction</th>
@@ -28,7 +29,6 @@ const Help = ({ show, onClose }: HelpProps) => {
                     </thead>
                     <tbody>
                         {Object.keys(wordToOperation).map((word) => {
-                            const operation = wordToOperation[word];
                             return (
                                 <tr key={word}>
                                     <td><b>{word}</b></td>
@@ -40,6 +40,30 @@ const Help = ({ show, onClose }: HelpProps) => {
                         )}
                     </tbody>
                 </Table>
+
+                <h4>Supported directives</h4>
+                <Table className="help-table" striped bordered hover>
+                    <thead>
+                        <tr>
+                            <th>Directive</th>
+                            <th>Example</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Object.keys(wordToDirective).map((word) => {
+                            return (
+                                <tr key={word}>
+                                    <td><b>{word}</b></td>
+                                    <td>This is an example</td>
+                                    <td>This is the description</td>
+                                </tr>
+                            );
+                        }
+                        )}
+                    </tbody>
+                </Table>
+
             </Modal.Body>
 
             <Modal.Footer>
