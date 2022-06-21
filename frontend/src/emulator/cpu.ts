@@ -97,6 +97,11 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.memory = new Array(defaultMemorySize).fill(0);
       this.stack = new Array(defaultStackSize).fill(0);
       this.program = [];
+
+      this.setFlag(Flags.Z, false);
+      this.setFlag(Flags.C, false);
+      this.setFlag(Flags.N, false);
+      this.setFlag(Flags.V, false);
     },
     load(program: Program) {
       // TODO: Copy the program memory to the CPU memory
