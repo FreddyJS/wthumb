@@ -11,22 +11,10 @@ const maxNegativeValue = -2147483648;
 
 const defaultRegs = {
   // General purpose registers
-  r0: 0x00,
-  r1: 0x00,
-  r2: 0x00,
-  r3: 0x00,
-  r4: 0x00,
-  r5: 0x00,
-  r6: 0x00,
-  r7: 0x00,
-  r8: 0x00,
-  r9: 0x00,
-  r10: 0x00,
-  r11: 0x00,
-  r12: 0x00,
-  r13: 0x00,
-  r14: 0x00,
-  r15: 0x00,
+  r0: 0x00, r1: 0x00, r2: 0x00, r3: 0x00,
+  r4: 0x00, r5: 0x00, r6: 0x00, r7: 0x00,
+  r8: 0x00, r9: 0x00, r10: 0x00, r11: 0x00,
+  r12: 0x00, r13: 0x00, r14: 0x00, r15: 0x00,
 };
 
 enum Flags {
@@ -47,7 +35,8 @@ type armCPU_T = {
   c: boolean;
   v: boolean;
   memory: number[];
-  stack: number[];
+  memSize: number;
+  stackSize: number;
   program: Instruction[];
 
   // Methods
@@ -61,8 +50,8 @@ type armCPU_T = {
 };
 
 type cpuProps = {
-  memorySize?: number;
-  stackSize?: number;
+  memorySize: number;
+  stackSize: number;
 };
 
 function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize: defaultStackSize }): armCPU_T {
@@ -72,8 +61,9 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     n: false,
     c: false,
     v: false,
-    memory: new Array(props.memorySize).fill(0),
-    stack: new Array(props.stackSize).fill(0),
+    memory: new Array(props.memorySize + props.stackSize).fill(0),
+    memSize: props.memorySize,
+    stackSize: props.stackSize,
     program: [],
 
     // Methods
@@ -94,8 +84,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     },
     reset() {
       this.regs = { ...defaultRegs };
-      this.memory = new Array(defaultMemorySize).fill(0);
-      this.stack = new Array(defaultStackSize).fill(0);
+      this.memory = new Array(this.memSize + this.stackSize).fill(0);
       this.program = [];
 
       this.setFlag(Flags.Z, false);
