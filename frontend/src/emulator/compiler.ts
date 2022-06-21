@@ -923,9 +923,13 @@ function compileAssembly(source: string): Program {
     } else if (directive !== undefined) {
       if (wordToDirective[firstWord] === Directive.TEXT) {
         inTextSection = true;
+        lines[i] = lines[i].replace(".text", "");
+        i--;
         continue;
       } else if (wordToDirective[firstWord] === Directive.DATA) {
         inTextSection = false;
+        lines[i] = lines[i].replace(".data", "");
+        i--;
         continue;
       }
 
