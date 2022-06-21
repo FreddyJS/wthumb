@@ -48,19 +48,20 @@ function App() {
   const [showHelp, setShowHelp] = useState(false);
 
   const startEmul = async () => {
-    try {
-      const res = await axios.post("http://localhost:8000/api/assembly/validate/", {assembly: code})
-      const data = res.data
-      console.log(data)
-      if (data["compiled"] === true) {
-        dispatch(runCode(code))
-      } else {
-        dispatch(setError(data["message"]))
-      }
-    } catch (e) {
-      console.log("The backend is not ready or online. Using typescript compiler")
-      dispatch(runCode(code))
-    }
+    dispatch(runCode(code))
+    // try {
+    //   const res = await axios.post("http://localhost:8000/api/assembly/validate/", {assembly: code})
+    //   const data = res.data
+    //   console.log(data)
+    //   if (data["compiled"] === true) {
+    //     dispatch(runCode(code))
+    //   } else {
+    //     dispatch(setError(data["message"]))
+    //   }
+    // } catch (e) {
+    //   console.log("The backend is not ready or online. Using typescript compiler")
+    //   dispatch(runCode(code))
+    // }
   }
 
   return (

@@ -1,3 +1,5 @@
+import { operationToWord } from "emulator/types";
+
 // Custom codemirror legacy-mode for a simplified arm thumb
 // Defines rules for the basic keywords, operations and registers
 
@@ -24,14 +26,11 @@ var directives: { [key: string]: string } = {
 };
 directives.syntax = "meta";
 
-var keywords: { [key: string]: string } = {
-  "mov": "keyword",
-  "add": "keyword",
-  "sub": "keyword",
-  "neg": "keyword",
-  "mul": "keyword",
-  "cmp": "keyword",
-  "cmn": "keyword",
+var keywords: { [key: string]: string } = {}
+
+// Fill keywords automatically using the operationToWord object in emulator/types.ts
+for (let i = 0; i < Object.keys(operationToWord).length; i++) {
+  keywords[operationToWord[i]] = "keyword";
 }
 
 var registers: { [key: string]: string } = {};
