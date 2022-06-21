@@ -1,4 +1,4 @@
-import compile_assembly, { assert, parseInmediateOperand } from './compiler';
+import compileAssembly, { assert, parseInmediateOperand } from './compiler';
 
 import { Operation, OperandType, Program, isInmediateValue } from './types';
 import type { Instruction } from './types';
@@ -97,7 +97,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.program = program.ins;
     },
     loadAssembly(assembly: string) {
-      const compiled = compile_assembly(assembly);
+      const compiled = compileAssembly(assembly);
       if (compiled.error) {
         throw new Error(compiled.error.message);
       }

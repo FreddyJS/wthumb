@@ -1,5 +1,9 @@
-import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue, Operand } from './types';
+import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue, Operand, wordToDirective, Directive } from './types';
 import type { Program, Instruction } from './types';
+
+
+// Object with the symbols defined by the user with .equiv, .eqv y .equ
+let symbols: { [key: string]: string } = {}
 
 const assert = (condition: boolean, message: string) => {
   if (!condition) {
@@ -45,6 +49,36 @@ function cleanInput(source: string): string {
   return stripComments(source).toLowerCase();
 }
 
+function compileDirective(line: string) {
+  const directive = wordToDirective[line.split(' ')[0]];
+  line = line.split(' ').slice(1).join('');
+
+  switch (directive) {
+    case Directive.EQUIV:
+    case Directive.EQV:
+    case Directive.EQU:
+      {
+        const args = line.split(',');
+        if (args.length !== 2) {
+          return "Invalid number of args for directive. Expected 2, got " + args.length;
+        }
+
+        const [symbol, value] = args;
+        if (directive !== Directive.EQU && symbols[symbol] !== undefined) {
+          return "Symbol '" + symbol + "' already defined";
+        } else if (!/^\d+$/.test(value) && symbols[value] === undefined) {
+          return "Value must be a number or another symbol";
+        }
+
+        symbols[symbol] = value;
+        return
+      }
+    default:
+      throw new Error('Unreachable code in compileDirective. Caused by: ' + directive);
+  }
+}
+
+
 function operandToOptype(operand: string): OperandType | undefined {
   // Check by regular expressions the corresponding operand type. If none is found, return undefined.
   let type: OperandType | undefined;
@@ -77,7 +111,13 @@ function lineToInstruction(line: string): Instruction | string {
     return 'Unknown operation: ' + words[0];
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 17, 'Exhaustive handling of operations in line_to_op');
+  for (let i = 0; i < args.length; i++) {
+    if (symbols[args[i].replace('#', "")] !== undefined) {
+      args[i] = '#' + symbols[args[i].replace('#', '')]
+    }
+  }
+
+  assert(Operation.TOTAL_OPERATIONS === 17, 'Exhaustive handling of operations in lineToInstruction');
   switch (operation) {
     case Operation.MOV: {
       if (args.length !== 2) {
@@ -810,91 +850,106 @@ function lineToInstruction(line: string): Instruction | string {
     }
 
     default:
-      throw new Error('Unreachable code in line_to_op');
+      throw new Error('Unreachable code in lineToInstruction');
   }
 }
 
-function compile_text_section(textSection: string, startLine: number): Program {
+function compileAssembly(source: string): Program {
   const labels: { [key: string]: number } = {};
-  const lines = textSection.split('\n');
+  const lines = source.split('\n');
+  let inTextSection = true;
   const program: Program = {
-    error: undefined,
     ins: [],
-  };
+    error: undefined,
+  }
 
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    if (line.length === 0) {
-      continue;
-    }
+    // Delete comments and lowercase assembly
+    lines[i] = cleanInput(lines[i]);
 
-    let label: string | undefined;
-    if (/^\w+:/.test(line)) {
-      // A label exists in this line
-      label = line.split(':')[0];
-      if (labels[label] !== undefined) {
-        program.error = {
-          line: i + startLine,
-          message: 'The symbol `' + label + '` is already defined',
-        };
-        return program;
-      }
+    // Skip empty lines
+    if (lines[i] === '') continue;
 
-      labels[label] = i;
-      line = line.slice(label.length + 1).trim();
-      while (line.length === 0) {
-        // The line is just a label, parse next line
-        line = lines[++i];
-      }
-    }
+    let firstWord = lines[i].split(' ')[0];
+    let operation = wordToOperation[firstWord];
+    let directive = wordToDirective[firstWord];
+    let label = /^\w+:/.test(lines[i]) ? lines[i].split(':')[0] : undefined;
 
-    const op = lineToInstruction(line);
-    if (typeof op === 'string') {
+    // If there is a label check if already exists and add if not
+    if (label !== undefined && labels[label] !== undefined) {
       program.error = {
-        line: i + startLine,
-        message: op,
-      };
+        line: i + 1,
+        message: 'Label already defined: ' + label,
+      }
 
-      return program;
-    } else {
-      op.label = label;
-      program.ins.push(op);
+      break;
+    } else if (label !== undefined) {
+      labels[label] = i;
+      lines[i] = lines[i].slice(label.length + 1).trim();
+      while (lines[i].length === 0) {
+        // The line is just a label, parse next line
+        i++;
+      }
+
+      // Clean line and get data again since the line changed
+      lines[i] = cleanInput(lines[i]);
+      firstWord = lines[i].split(' ')[0];
+      operation = wordToOperation[firstWord];
+      directive = wordToDirective[firstWord];
     }
+
+    if (operation !== undefined && !inTextSection) {
+      program.error = {
+        line: i + 1,
+        message: "Operations not supported in data section",
+      }
+
+      break;
+    }
+
+    if (operation !== undefined) {
+      const instruction = lineToInstruction(lines[i]);
+      if (typeof instruction === 'string') {
+        program.error = {
+          line: i + 1,
+          message: instruction,
+        };
+  
+        break;
+      }
+
+      instruction.label = label;
+      program.ins.push(instruction);
+    } else if (directive !== undefined) {
+      if (wordToDirective[firstWord] === Directive.TEXT) {
+        inTextSection = true;
+        continue;
+      } else if (wordToDirective[firstWord] === Directive.DATA) {
+        inTextSection = false;
+        continue;
+      }
+
+      const directive = compileDirective(lines[i]);
+      if (typeof directive === 'string') {
+        program.error = {
+          line: i + 1,
+          message: directive,
+        }
+      }
+    } else {
+      program.error = {
+        line: i + 1,
+        message: "Unknown operation: " + firstWord,
+      }
+
+      break;
+    }
+
   }
 
+  symbols = {}
   return program;
 }
 
-function compile_assembly(source: string): Program {
-  const textSectionIndex = source.indexOf('.text');
-  const dataSectionIndex = source.indexOf('.data');
-  if (textSectionIndex === -1) {
-    return { error: { message: 'Missing .text directive', line: 0 }, ins: [] };
-  }
-
-  let textSection = '';
-  let dataSection = '';
-  if (dataSectionIndex === -1) {
-    // No data section in assembly, no memory needed
-    textSection = source.slice(textSectionIndex + 5);
-  } else if (dataSectionIndex < textSectionIndex) {
-    // Data section is before text section
-    textSection = source.slice(textSectionIndex + 5);
-    dataSection = source.slice(dataSectionIndex + 5, textSectionIndex);
-  } else {
-    // Data section is after text section
-    textSection = source.slice(textSectionIndex + 5, dataSectionIndex);
-    dataSection = source.slice(dataSectionIndex + 5);
-  }
-
-  textSection = cleanInput(textSection);
-  dataSection = cleanInput(dataSection);
-
-  const program: Program = compile_text_section(textSection, source.substring(0, textSectionIndex).split('\n').length);
-  void dataSection;
-
-  return program;
-}
-
-export default compile_assembly;
+export default compileAssembly;
 export { assert, parseInmediateOperand };

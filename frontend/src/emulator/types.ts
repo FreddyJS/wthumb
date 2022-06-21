@@ -1,3 +1,4 @@
+// CPU Operations
 enum Operation {
   // Arithmetic operations
   MOV,
@@ -99,6 +100,32 @@ type Instruction = {
   label?: string;
 };
 
+// Assembler directives
+enum Directive {
+  TEXT,
+  DATA,
+  EQUIV,
+  EQV,
+  EQU,
+}
+
+const wordToDirective: { [key: string]: Directive } = {
+  ".text": Directive.TEXT,
+  ".data": Directive.DATA,
+  ".equiv": Directive.EQUIV,
+  ".eqv": Directive.EQUIV,
+  ".equ": Directive.EQU,
+}
+
+const directiveToWord: { [key: number]: string } = {
+  [Directive.TEXT]: ".text",
+  [Directive.DATA]: ".data",
+  [Directive.EQUIV]: ".equiv",
+  [Directive.EQV]: ".eqv",
+  [Directive.EQU]: ".equ",
+}
+
+// Program
 type Program = {
   error?: CompilerError;
   ins: Instruction[];
@@ -112,5 +139,5 @@ function isInmediateValue(type: OperandType): boolean {
   return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
 }
 
-export { Operation, OperandType, wordToOperation, operationToWord, isLowHighRegister, isInmediateValue };
+export { Operation, OperandType, Directive, wordToOperation, operationToWord, wordToDirective, directiveToWord, isLowHighRegister, isInmediateValue };
 export type { CompilerError, Operand, Instruction, Program };
