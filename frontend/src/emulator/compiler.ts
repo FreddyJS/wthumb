@@ -77,7 +77,7 @@ function lineToInstruction(line: string): Instruction | string {
     return 'Unknown operation: ' + words[0];
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 13, 'Exhaustive handling of operations in line_to_op');
+  assert(Operation.TOTAL_OPERATIONS === 17, 'Exhaustive handling of operations in line_to_op');
   switch (operation) {
     case Operation.MOV: {
       if (args.length !== 2) {
@@ -424,7 +424,7 @@ function lineToInstruction(line: string): Instruction | string {
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
-      
+
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
         return 'Invalid operand 1 for NEG. Expected r[0-15], got ' + args[0];
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
@@ -683,6 +683,128 @@ function lineToInstruction(line: string): Instruction | string {
         operands: [
           { type: op1Type, value: args[0] },
           { type: op2Type, value: args[1] },
+        ],
+      };
+    }
+
+    case Operation.LSL: {
+      if (args.length !== 3) {
+        return "Invalid number of arguments for LSL. Expected 3, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      const op3Type = operandToOptype(args[2]);
+
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for LSL. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for LSL. Expected register r[0-15], got ' + args[1];
+      } else if (op3Type === undefined || (!isLowHighRegister(op3Type) && !isInmediateValue(op3Type))) {
+        return 'Invalid operand 3 for LSL. Expected register r[0-15] or #0-31, got ' + args[2];
+      } else if (isInmediateValue(op3Type) && isOutOfRange(args[2], 31)) {
+        return 'Invalid operand 3 for LSL. Number must be between 0 and 31, got ' + args[2];
+      }
+
+      // CASE: lsl r1, r2
+      return {
+        operation: Operation.LSL,
+        name: 'lsl',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+          { type: op3Type, value: args[2] },
+        ],
+      };
+    }
+
+    case Operation.LSR: {
+      if (args.length !== 3) {
+        return "Invalid number of arguments for LSR. Expected 3, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      const op3Type = operandToOptype(args[2]);
+
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for LSR. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for LSR. Expected register r[0-15], got ' + args[1];
+      } else if (op3Type === undefined || (!isLowHighRegister(op3Type) && !isInmediateValue(op3Type))) {
+        return 'Invalid operand 3 for LSR. Expected register r[0-15] or #0-31, got ' + args[2];
+      } else if (isInmediateValue(op3Type) && isOutOfRange(args[2], 31)) {
+        return 'Invalid operand 3 for LSR. Number must be between 0 and 31, got ' + args[2];
+      }
+
+      // CASE: lsr r1, r2
+      return {
+        operation: Operation.LSR,
+        name: 'lsr',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+          { type: op3Type, value: args[2] },
+        ],
+      };
+    }
+
+    case Operation.ASR: {
+      if (args.length !== 3) {
+        return "Invalid number of arguments for ASR. Expected 3, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      const op3Type = operandToOptype(args[2]);
+
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for ASR. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for ASR. Expected register r[0-15], got ' + args[1];
+      } else if (op3Type === undefined || (!isLowHighRegister(op3Type) && !isInmediateValue(op3Type))) {
+        return 'Invalid operand 3 for ASR. Expected register r[0-15] or #0-31, got ' + args[2];
+      } else if (isInmediateValue(op3Type) && isOutOfRange(args[2], 31)) {
+        return 'Invalid operand 3 for ASR. Number must be between 0 and 31, got ' + args[2];
+      }
+
+      // CASE: asr r1, r2
+      return {
+        operation: Operation.ASR,
+        name: 'asr',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+          { type: op3Type, value: args[2] },
+        ],
+      };
+    }
+
+    case Operation.ROR: {
+      if (args.length !== 3) {
+        return "Invalid number of arguments for ROR. Expected 3, got " + args.length;
+      }
+
+      const op1Type = operandToOptype(args[0]);
+      const op2Type = operandToOptype(args[1]);
+      const op3Type = operandToOptype(args[2]);
+
+      if (op1Type === undefined || !isLowHighRegister(op1Type)) {
+        return 'Invalid operand 1 for ROR. Expected register r[0-15], got ' + args[0];
+      } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
+        return 'Invalid operand 2 for ROR. Expected register r[0-15], got ' + args[1];
+      } else if (op3Type === undefined || !isLowHighRegister(op3Type)) {
+        return 'Invalid operand 3 for ROR. Expected register r[0-15], got ' + args[2];
+      }
+
+      // CASE: ror r1, r2
+      return {
+        operation: Operation.ROR,
+        name: 'ror',
+        operands: [
+          { type: op1Type, value: args[0] },
+          { type: op2Type, value: args[1] },
+          { type: op3Type, value: args[2] },
         ],
       };
     }

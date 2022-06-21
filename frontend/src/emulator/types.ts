@@ -1,4 +1,5 @@
 enum Operation {
+  // Arithmetic operations
   MOV,
   ADD,
   SUB,
@@ -6,16 +7,25 @@ enum Operation {
   MUL,
   CMP,
   CMN,
+
+  // Logical operations
   AND,
   BIC,
   ORR,
   EOR,
   MVN,
   TST,
+
+  // Shift operations
+  LSL,
+  LSR,
+  ASR,
+  ROR,
   TOTAL_OPERATIONS,
 }
 
 const wordToOperation: { [key: string]: Operation } = {
+  // Arithmetic operations
   mov: Operation.MOV,
   add: Operation.ADD,
   sub: Operation.SUB,
@@ -23,15 +33,24 @@ const wordToOperation: { [key: string]: Operation } = {
   mul: Operation.MUL,
   cmp: Operation.CMP,
   cmn: Operation.CMN,
+
+  // Logical operations
   and: Operation.AND,
   bic: Operation.BIC,
   orr: Operation.ORR,
   eor: Operation.EOR,
   mvn: Operation.MVN,
   tst: Operation.TST,
+
+  // Shift operations
+  lsl: Operation.LSL,
+  lsr: Operation.LSR,
+  asr: Operation.ASR,
+  ror: Operation.ROR,
 };
 
 const operationToWord: { [key: number]: string } = {
+  // Arithmetic operations
   [Operation.MOV]: 'mov',
   [Operation.ADD]: 'add',
   [Operation.SUB]: 'sub',
@@ -39,12 +58,20 @@ const operationToWord: { [key: number]: string } = {
   [Operation.MUL]: 'mul',
   [Operation.CMP]: 'cmp',
   [Operation.CMN]: 'cmn',
+
+  // Logical operations
   [Operation.AND]: 'and',
   [Operation.BIC]: 'bic',
   [Operation.ORR]: 'orr',
   [Operation.EOR]: 'eor',
   [Operation.MVN]: 'mvn',
   [Operation.TST]: 'tst',
+
+  // Shift operations
+  [Operation.LSL]: 'lsl',
+  [Operation.LSR]: 'lsr',
+  [Operation.ASR]: 'asr',
+  [Operation.ROR]: 'ror',
 };
 
 enum OperandType {
