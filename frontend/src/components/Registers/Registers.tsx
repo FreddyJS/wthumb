@@ -1,29 +1,94 @@
-import "./registers.scss";
-import { useAppSelector } from "hooks";
+import { useState } from "react";
 
-import Button from "react-bootstrap/Button";
+import "./registers.scss";
+import { useAppDispatch, useAppSelector } from "hooks";
+
+import Form from "react-bootstrap/Form";
 import Badge from "react-bootstrap/Badge";
+import Button from "react-bootstrap/Button";
+import Popover from "react-bootstrap/Popover";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import { FormGroup } from "react-bootstrap";
+import { updateRegister } from "reducers/cpuReducer";
 
 const Registers = () => {
+  const dispatch = useAppDispatch();
+
   const regs = useAppSelector(state => state.cpu.cpu.regs);
   const z = useAppSelector(state => state.cpu.cpu.z);
   const n = useAppSelector(state => state.cpu.cpu.n);
   const c = useAppSelector(state => state.cpu.cpu.c);
   const v = useAppSelector(state => state.cpu.cpu.v);
+
+  const [selectedRegister, setSelectedRegister] = useState('r0');
+  const [registerValue, setRegisterValue] = useState('');
+  const [isValidValue, setIsValidValue] = useState(false);
+
   const regs_n = Object.keys(regs).length;
   const regs_per_row = 4;
+
+  const saveRegister = () => {
+    dispatch(updateRegister({ register: selectedRegister, value: Number(registerValue) }));
+    setRegisterValue('');
+  }
+
+  const onChangeRegisterValue = (value: string) => {
+    if (value === '' || isNaN(Number(value)) || Number(value) > 0xFFFFFFFF || Number(value) < 0x0 ) {
+      setIsValidValue(false);
+    } else {
+      setIsValidValue(true);
+    }
+
+    setRegisterValue(value.toUpperCase().replace("X", "x"));
+  }
+
+  const registerMenu = (
+    <Popover id="popover-basic">
+      <Popover.Header as="h3">Register {selectedRegister}</Popover.Header>
+      <Popover.Body>
+        <Form onSubmit={(e) => e.preventDefault()}>
+          <FormGroup>
+            <Form.Label htmlFor="inputPassword5">Register value</Form.Label>
+            <Form.Control
+              placeholder={"0x" + regs[selectedRegister].toString(16).padStart(8, '0').toUpperCase()}
+              isInvalid={!isValidValue}
+              isValid={isValidValue}
+              value={registerValue}
+              id="newregval"
+              type="text"
+              onChange={(e) => onChangeRegisterValue(e.target.value)}
+            />
+            <Form.Control.Feedback type="invalid">
+              Not a valid 32 bits number.
+              {Number(registerValue) > 0xFFFFFFFF ? " Number too big" : Number(registerValue) < 0x0 ? " No negative numbers" : " Not a Number"}
+            </Form.Control.Feedback>
+            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Text id="valuehelp" muted>New value of register. 32 bits number.</Form.Text>
+
+          </FormGroup>
+
+          { isValidValue ? 
+            <Button onClick={saveRegister}>Save</Button>
+            :
+            <Button onClick={saveRegister} disabled>Save</Button>
+          }
+        </Form>
+      </Popover.Body>
+    </Popover>
+  );
 
   const registers_row = (first: number, last: number) => {
     let row: JSX.Element[] = [];
     for (let i = first; i < last; i++) {
       row.push(
-        <Button key={i} variant="outline-primary" className="registers-item">
-          <div className="registers-item-name">R{i}</div>
-          <Badge bg="primary" className="registers-item-value">0x{regs[`r${i}`].toString(16).padStart(8, '0')}</Badge>
-        </Button>
+        <OverlayTrigger key={"overlay" + i}trigger="click" placement="left" overlay={registerMenu} rootClose={true}>
+          <Button key={i} variant="outline-primary" className="registers-item" onClick={() => setSelectedRegister('r' + i)}>
+            <div className="registers-item-name">R{i}</div>
+            <Badge bg="primary" className="registers-item-value">0x{regs[`r${i}`].toString(16).padStart(8, '0').toUpperCase()}</Badge>
+          </Button>
+        </OverlayTrigger>
       );
     }
-
 
     return row;
   };
@@ -43,7 +108,7 @@ const Registers = () => {
     }
     return rows;
   }
-          
+  
   return (
     <div className="registers">
       <h3>Registers</h3>

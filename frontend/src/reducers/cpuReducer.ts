@@ -34,6 +34,9 @@ export const cpuSlice = createSlice({
         state.error = undefined;
       }
     },
+    updateRegister: (state, action) => {
+      state.cpu.regs[action.payload.register] = action.payload.value;
+    },
     runCode: (state, action) => {
       state.cpu.reset();
       state.cpu.loadAssembly(action.payload);
@@ -57,7 +60,7 @@ export const cpuSlice = createSlice({
   },
 });
 
-export const { setError, updateProgram, runCode, step, reset } = cpuSlice.actions;
+export const { setError, updateProgram, updateRegister, runCode, step, reset } = cpuSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
