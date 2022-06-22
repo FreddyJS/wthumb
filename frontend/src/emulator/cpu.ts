@@ -95,14 +95,13 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.setFlag(Flags.V, false);
     },
     load(program: Program) {
-      // TODO: Copy the program memory to the CPU memory
       this.program = program.ins;
     },
     loadAssembly(assembly: string) {
       const [program, initialMemory] = compileAssembly(assembly);
       if (program.error) {
         this.error = program.error;
-        throw new Error(program.error.message);
+        return console.error("[armthumb]: ", program.error);
       }
 
       this.program = program.ins;

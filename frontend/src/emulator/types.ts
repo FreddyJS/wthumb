@@ -120,6 +120,14 @@ enum Directive {
   TOTAL_DIRECTIVES,
 }
 
+const dataDirectives: Directive[] = [
+  Directive.ALIGN, Directive.BALIGN,
+  Directive.ASCII, Directive.ASCIZ,
+  Directive.BYTE, Directive.HWORD,
+  Directive.WORD, Directive.QUAD,
+  Directive.SPACE
+]
+
 const wordToDirective: { [key: string]: Directive } = {
   ".align": Directive.ALIGN,
   ".balign": Directive.BALIGN,
@@ -170,5 +178,5 @@ function isInmediateValue(type: OperandType): boolean {
   return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
 }
 
-export { Operation, OperandType, Directive, wordToOperation, operationToWord, wordToDirective, directiveToWord, isLowHighRegister, isInmediateValue };
+export { Operation, OperandType, Directive, wordToOperation, operationToWord, wordToDirective, directiveToWord, dataDirectives, isLowHighRegister, isInmediateValue };
 export type { CompilerError, Operand, Instruction, Program };

@@ -1,8 +1,9 @@
-import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue, Operand, wordToDirective, Directive } from './types';
+import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue, Operand, wordToDirective, Directive, dataDirectives } from './types';
 import type { Program, Instruction } from './types';
 
 
-// Object with the symbols defined by the user with .equiv, .eqv y .equ
+// Global variables user by the compiler
+let program: Program = { ins: [], error: undefined }
 let symbols: { [key: string]: string } = {}
 let memory: number[] = []
 let memByteIndex = 0
@@ -12,6 +13,18 @@ const assert = (condition: boolean, message: string) => {
     throw new Error(message);
   }
 };
+
+function _throwCompilerError(error: string, line: number | undefined) {
+  line = line === undefined ? 0 : line;
+  program.error = {
+    message: error,
+    line: line,
+  }
+}
+
+const throwCompilerError = (error: string) => {
+  _throwCompilerError(error, undefined);
+}
 
 function parseInmediateOperand(operand: Operand): number {
   const radix = operand.value.startsWith('#0x') ? 16 : 10;
@@ -64,7 +77,7 @@ function compileDirective(line: string) {
       {
         const args = line.split(',').map((arg) => arg.trim());
         if (args.length !== 2) {
-          return "Invalid number of args for directive. Expected 2, got " + args.length;
+          return throwCompilerError('Invalid number of args for directive. Expected 2, got ' + args.length);
         }
 
         // Directive.EQV = Directive.EQUIV
@@ -74,9 +87,9 @@ function compileDirective(line: string) {
 
         const [symbol, value] = args;
         if (directive !== Directive.EQU && symbols[symbol] !== undefined) {
-          return "Symbol '" + symbol + "' already defined";
+          return throwCompilerError('Symbol \'' + symbol + '\' already defined');
         } else if (!/^\d+$/.test(value) && symbols[value] === undefined) {
-          return "Value must be a number or another symbol";
+          return throwCompilerError('Value must be a number or another symbol');
         }
 
         symbols[symbol] = value;
@@ -90,7 +103,7 @@ function compileDirective(line: string) {
       {
         const args = line.split(',').map((arg) => arg.trim());
         if (args.length === 0) {
-          return "No value provided for the .byte directive";
+          return throwCompilerError('No value provided for the .byte directive');
         }
 
         let bytesToSave = 1;
@@ -106,7 +119,7 @@ function compileDirective(line: string) {
         for (let i = 0; i < args.length; i++) {
           let value = Number(args[i]) >>> 0;
           if (value === undefined) {
-            return "Invalid value '" + args[i] + " for the .byte directive";
+            return throwCompilerError('Invalid value \'' + args[i] + '\' for the .byte directive');
           }
 
           while (savedBytes !== bytesToSave) {
@@ -130,7 +143,7 @@ function compileDirective(line: string) {
       {
         const args = line.split(' ').map((arg) => arg.trim());
         if (args.length !== 1) {
-          return "Invalid number of arguments for SPACE. Expected 1";
+          return throwCompilerError('Invalid number of arguments for SPACE. Expected 1');
         }
 
         const N = Number(args[0]);
@@ -149,18 +162,17 @@ function compileDirective(line: string) {
       {
         const args = line.split(' ');
         if (args.length !== 1) {
-          return "Invalid number of arguments for ALIGN. Expected 1";
+          return throwCompilerError('Invalid number of arguments for ALIGN. Expected 1');
         }
 
         const N = Number(args[0]);
         const base = directive === Directive.BALIGN ? N : 2 ** N;
         if (N === undefined) {
-          return "Invalid value for alignment";
+          return throwCompilerError('Invalid value for alignment');
         } else if (directive === Directive.ALIGN && N > 15) {
-          return "Invalid value for ALIGN argument. Expected number 0-15";
+          return throwCompilerError('Invalid value for ALIGN argument. Expected number 0-15');
         } else if (directive === Directive.BALIGN && ((Math.log2(N) % 1) !== 0)) {
-          console.log("SQRT: " + N + " - " + Math.sqrt(N))
-          return "Invalid value for BALIGN argument. Number not a power of 2";
+          return throwCompilerError('Invalid value for BALIGN argument. Number not a power of 2');
         }
 
         while ((memByteIndex % base) !== 0) {
@@ -174,7 +186,7 @@ function compileDirective(line: string) {
     case Directive.ASCIZ:
       {
         if (!/^"\w+(\s+\w+)*"$/.test(line)) {
-          return "Invalid string value. Use \"Hello\"";
+          return throwCompilerError('Invalid string value. Use "Hello"');
         }
 
         line = line.replace('"', '').replace('"', '');
@@ -222,7 +234,7 @@ function operandToOptype(operand: string): OperandType | undefined {
   return type;
 }
 
-function lineToInstruction(line: string): Instruction | string {
+function lineToInstruction(line: string): Instruction | void {
   const words = line.split(' ');
   const args = words
     .slice(1)
@@ -232,7 +244,7 @@ function lineToInstruction(line: string): Instruction | string {
 
   const operation = wordToOperation[words[0]];
   if (operation === undefined) {
-    return 'Unknown operation: ' + words[0];
+    return throwCompilerError('Unknown operation: ' + words[0]);
   }
 
   for (let i = 0; i < args.length; i++) {
@@ -245,7 +257,7 @@ function lineToInstruction(line: string): Instruction | string {
   switch (operation) {
     case Operation.MOV: {
       if (args.length !== 2) {
-        return 'Invalid number of operands for MOV. Expected 2, got ' + args.length;
+        return throwCompilerError('Invalid number of operands for MOV. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -256,18 +268,18 @@ function lineToInstruction(line: string): Instruction | string {
       }
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for MOV. Expected r[0-15] or sp, got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for MOV. Expected r[0-15] or sp, got ' + args[0]);
       } else if (op2Type === undefined) {
-        return 'Invalid operand 2 for MOV. Expected register or #8bit_Inm, got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for MOV. Expected register or #8bit_Inm, got ' + args[1]);
       } else if ((op1Type === OperandType.SpRegister || op1Type === OperandType.HighRegister) && isInmediateValue(op2Type)) {
-        return 'Invalid operand 2 for MOV. Only low registers allowed with inmediate values';
+        return throwCompilerError('Invalid operand 2 for MOV. Only low registers allowed with inmediate values');
       }
 
       if (isInmediateValue(op2Type)) {
         if (isOutOfRange(args[1], 255)) {
-          return 'Invalid inmediate for MOV. Number out of range. Expected 0-255 but got ' + args[1];
+          return throwCompilerError('Invalid inmediate for MOV. Number out of range. Expected 0-255 but got ' + args[1]);
         } else if (op1Type === OperandType.HighRegister) {
-          return 'Invalid register for MOV. Only low registers are allowed with inmediate values';
+          return throwCompilerError('Invalid register for MOV. Only low registers are allowed with inmediate values');
         }
       }
 
@@ -284,7 +296,7 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.ADD: {
       if (args.length !== 2 && args.length !== 3) {
-        return 'Invalid number of operands for ADD';
+        return throwCompilerError('Invalid number of operands for ADD');
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -296,9 +308,9 @@ function lineToInstruction(line: string): Instruction | string {
       }
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0]);
       } else if (op2Type === undefined) {
-        return 'Invalid operand 2 for ADD. Unexpected value: ' + args[1];
+        return throwCompilerError('Invalid operand 2 for ADD. Unexpected value: ' + args[1]);
       }
 
       if (args.length === 2) {
@@ -306,9 +318,9 @@ function lineToInstruction(line: string): Instruction | string {
         switch (op1Type) {
           case OperandType.LowRegister:
             if (!isInmediateValue(op2Type) && !isLowHighRegister(op2Type)) {
-              return 'Invalid operand 2 for ADD. Expected #Inm, r[0-15] or sp, got ' + args[1];
+              return throwCompilerError('Invalid operand 2 for ADD. Expected #Inm, r[0-15] or sp, got ' + args[1]);
             } else if (isInmediateValue(op2Type) && isOutOfRange(args[1], 255)) {
-              return 'Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + args[1];
+              return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + args[1]);
             }
 
             // CASE: ADD r1, [Rs | #Inm | sp]
@@ -323,9 +335,9 @@ function lineToInstruction(line: string): Instruction | string {
 
           case OperandType.HighRegister:
             if (isInmediateValue(op2Type)) {
-              return 'Invalid operand 2 for ADD. Only low registers are allowed with inmediate values';
+              return throwCompilerError('Invalid operand 2 for ADD. Only low registers are allowed with inmediate values');
             } else if (!isLowHighRegister(op2Type)) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
             }
 
             return {
@@ -339,12 +351,12 @@ function lineToInstruction(line: string): Instruction | string {
 
           case OperandType.SpRegister:
             if (!isInmediateValue(op2Type) && !isLowHighRegister(op2Type)) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or #Inm, got ' + args[1];
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or #Inm, got ' + args[1]);
             } else if (isInmediateValue(op2Type)) {
               if (isOutOfRange(args[1], 508)) {
-                return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + args[1];
+                return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + args[1]);
               } else if (!isAligned(args[1], 4)) {
-                return 'Invalid inmediate for ADD. Number not multiple of 4. Expected 0-508 but got ' + args[1];
+                return throwCompilerError('Invalid inmediate for ADD. Number not multiple of 4. Expected 0-508 but got ' + args[1]);
               }
             }
 
@@ -359,24 +371,24 @@ function lineToInstruction(line: string): Instruction | string {
             };
 
           default:
-            return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0];
+            return throwCompilerError('Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0]);
         }
       } else {
         // ADD LONG FORM
         if (op3Type === undefined) {
-          return 'Invalid operand 3 for ADD. Expected register or #Inm, got ' + args[2];
+          return throwCompilerError('Invalid operand 3 for ADD. Expected register or #Inm, got ' + args[2]);
         } else if (
           (op1Type === OperandType.HighRegister || op2Type === OperandType.HighRegister) &&
           isInmediateValue(op3Type)
         ) {
-          return 'Invalid register for ADD. Only low registers are allowed with inmediate values';
+          return throwCompilerError('Invalid register for ADD. Only low registers are allowed with inmediate values');
         } else if (
           (isLowHighRegister(op3Type) || op3Type === OperandType.SpRegister) &&
           args[0] !== args[1] &&
           args[0] !== args[2] &&
           op1Type !== OperandType.LowRegister && op2Type !== OperandType.LowRegister && op3Type !== OperandType.LowRegister
         ) {
-          return 'Destiny must overlap one source register';
+          return throwCompilerError('Destiny must overlap one source register');
         }
 
         // op1Type and op2Type are registers, op3Type is an inmediate or register
@@ -386,23 +398,21 @@ function lineToInstruction(line: string): Instruction | string {
               if (isInmediateValue(op3Type)) {
                 const maxValue = args[0] === args[1] ? 255 : 7;
                 if (isOutOfRange(args[2], maxValue)) {
-                  return (
-                    'Invalid inmediate for ADD. Number out of range. Expected 0-' + maxValue + ' but got ' + args[2]
-                  );
+                  return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-' + maxValue + ' but got ' + args[2]);
                 }
               } else if (!isLowHighRegister(op3Type)) {
-                return 'Invalid operand 3 for ADD. Expected r[0-15], sp or #8bit_Inm, got ' + args[2];
+                return throwCompilerError('Invalid operand 3 for ADD. Expected r[0-15], sp or #8bit_Inm, got ' + args[2]);
               }
             } else if (op2Type === OperandType.SpRegister) {
               if (isInmediateValue(op3Type)) {
                 if (isOutOfRange(args[2], 1020)) {
-                  return 'Invalid inmediate for ADD. Number out of range. Expected 0-1020 but got ' + args[2];
+                  return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-1020 but got ' + args[2]);
                 }
               } else {
-                return 'Invalid operand 3 for ADD. Expected #Inm, got ' + args[2];
+                return throwCompilerError('Invalid operand 3 for ADD. Expected #Inm, got ' + args[2]);
               }
             } else if (op2Type !== OperandType.HighRegister) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
             }
 
             // CASE: ADD r1, r2, [#0xFF | r3]
@@ -418,9 +428,9 @@ function lineToInstruction(line: string): Instruction | string {
 
           case OperandType.HighRegister:
             if (!isLowHighRegister(op2Type)) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
             } else if (!isLowHighRegister(op3Type)) {
-              return 'Invalid operand 3 for ADD. Expected r[0-15], got ' + args[2];
+              return throwCompilerError('Invalid operand 3 for ADD. Expected r[0-15], got ' + args[2]);
             }
 
             return {
@@ -435,13 +445,13 @@ function lineToInstruction(line: string): Instruction | string {
 
           case OperandType.SpRegister:
             if (!isLowHighRegister(op2Type)) {
-              return 'Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1];
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
             } else if (isInmediateValue(op3Type)) {
               if (isOutOfRange(args[2], 508)) {
-                return 'Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + args[2];
+                return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-508 but got ' + args[2]);
               }
             } else if (!isLowHighRegister(op3Type)) {
-              return 'Invalid operand 3 for ADD. Expected r[0-15] or #Inm, got ' + args[2];
+              return throwCompilerError('Invalid operand 3 for ADD. Expected r[0-15] or #Inm, got ' + args[2]);
             }
 
             return {
@@ -455,14 +465,14 @@ function lineToInstruction(line: string): Instruction | string {
             };
 
           default:
-            return 'Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0];
+            return throwCompilerError('Invalid operand 1 for ADD. Expected r[0-15] or sp, got ' + args[0]);
         }
       }
     }
 
     case Operation.SUB: {
       if (args.length !== 2 && args.length !== 3) {
-        return 'Invalid number of arguments for SUB. Expected 2 or 3, got ' + args.length;
+        return throwCompilerError('Invalid number of arguments for SUB. Expected 2 or 3, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -476,19 +486,19 @@ function lineToInstruction(line: string): Instruction | string {
       // Short form
       if (args.length === 2) {
         if (op1Type === undefined || isInmediateValue(op1Type) || op1Type === OperandType.HighRegister) {
-          return 'Invalid operand 1 for SUB. Expected r[0-7] or #Inm, got ' + args[0];
+          return throwCompilerError('Invalid operand 1 for SUB. Expected r[0-7] or #Inm, got ' + args[0]);
         } else if (op2Type === undefined || op2Type === OperandType.HighRegister) {
-          return 'Invalid operand 2 for SUB. Expected r[0-7] or #Inm, got ' + args[1];
+          return throwCompilerError('Invalid operand 2 for SUB. Expected r[0-7] or #Inm, got ' + args[1]);
         }
 
         // op1Type is a register
         if (op1Type === OperandType.SpRegister) {
           if (!isInmediateValue(op2Type)) {
-            return 'Invalid operand 2 for SUB. Expected #Inm, got ' + args[1];
+            return throwCompilerError('Invalid operand 2 for SUB. Expected #Inm, got ' + args[1]);
           } else if (isOutOfRange(args[1], 508)) {
-            return 'Invalid inmediate for SUB. Number out of range. Expected 0-508 but got ' + args[1];
+            return throwCompilerError('Invalid inmediate for SUB. Number out of range. Expected 0-508 but got ' + args[1]);
           } else if (!isAligned(args[1], 4)) {
-            return 'Invalid inmediate for SUB. Number not aligned to 4.';
+            return throwCompilerError('Invalid inmediate for SUB. Number not aligned to 4.');
           }
 
           // CASE: sub sp, #0xFF
@@ -515,7 +525,7 @@ function lineToInstruction(line: string): Instruction | string {
           } else {
             // CASE: sub r1, #0xFF
             if (isOutOfRange(args[1], 255)) {
-              return 'Invalid inmediate for SUB. Number out of range. Expected 0-255 but got ' + args[1];
+              return throwCompilerError('Invalid inmediate for SUB. Number out of range. Expected 0-255 but got ' + args[1]);
             }
 
             return {
@@ -531,15 +541,15 @@ function lineToInstruction(line: string): Instruction | string {
       } else {
         // Long form
         if (op1Type === undefined || op1Type === OperandType.HighRegister || isInmediateValue(op1Type)) {
-          return 'Invalid operand 1 for SUB. Expected r[0-7] or sp, got ' + args[0];
+          return throwCompilerError('Invalid operand 1 for SUB. Expected r[0-7] or sp, got ' + args[0]);
         }
 
         // op1Type is a low register
         if (op1Type === OperandType.LowRegister) {
           if (op2Type !== OperandType.LowRegister) {
-            return 'Invalid operand 2 for SUB. Expected r[0-7], got ' + args[1];
+            return throwCompilerError('Invalid operand 2 for SUB. Expected r[0-7], got ' + args[1]);
           } else if (op3Type === undefined || (op3Type !== OperandType.LowRegister && !isInmediateValue(op3Type))) {
-            return 'Invalid operand 3 for SUB. Expected r[0-7] or #Inm, got ' + args[2];
+            return throwCompilerError('Invalid operand 3 for SUB. Expected r[0-7] or #Inm, got ' + args[2]);
           }
 
           // CASE: sub r1, r2, r3
@@ -555,15 +565,15 @@ function lineToInstruction(line: string): Instruction | string {
         } else {
           // op1Type is a sp register
           if (op2Type !== OperandType.SpRegister) {
-            return 'Invalid operand 2 for SUB. Expected sp, got ' + args[1];
+            return throwCompilerError('Invalid operand 2 for SUB. Expected sp, got ' + args[1]);
           } else if (op3Type === undefined || !isInmediateValue(op3Type)) {
-            return 'Invalid operand 3 for SUB. Expected #Inm, got ' + args[2];
+            return throwCompilerError('Invalid operand 3 for SUB. Expected #Inm, got ' + args[2]);
           }
 
           if (isOutOfRange(args[2], 508)) {
-            return 'Invalid inmediate for SUB. Number out of range. Expected 0-508 but got ' + args[2];
+            return throwCompilerError('Invalid inmediate for SUB. Number out of range. Expected 0-508 but got ' + args[2]);
           } else if (!isAligned(args[2], 4)) {
-            return 'Invalid inmediate for SUB. Number not aligned to 4.';
+            return throwCompilerError('Invalid inmediate for SUB. Number not aligned to 4.');
           }
 
           // CASE: sub sp, sp, #0xFF
@@ -583,16 +593,16 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.NEG: {
       if (args.length !== 2) {
-        return 'Invalid number of arguments for NEG. Expected 2, got ' + args.length;
+        return throwCompilerError('Invalid number of arguments for NEG. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for NEG. Expected r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for NEG. Expected r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for NEG. Expected r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for NEG. Expected r[0-15], got ' + args[1]);
       }
 
       // CASE: neg r1, r2
@@ -608,7 +618,7 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.MUL: {
       if (args.length !== 2 && args.length !== 3) {
-        return 'Invalid number of arguments for MUL. Expected 2 or 3, got ' + args.length;
+        return throwCompilerError('Invalid number of arguments for MUL. Expected 2 or 3, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -616,9 +626,9 @@ function lineToInstruction(line: string): Instruction | string {
       const op3Type = operandToOptype(args[2]);
 
       if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
-        return 'Invalid operand 1 for MUL. Expected low register r[0-7], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for MUL. Expected low register r[0-7], got ' + args[0]);
       } else if (op2Type === undefined || op2Type !== OperandType.LowRegister) {
-        return 'Invalid operand 2 for MUL. Expected low register r[0-7], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for MUL. Expected low register r[0-7], got ' + args[1]);
       }
 
       // Short form
@@ -635,9 +645,9 @@ function lineToInstruction(line: string): Instruction | string {
       } else {
         // Long form
         if (op3Type === undefined || op3Type !== OperandType.LowRegister) {
-          return 'Invalid operand 3 for MUL. Expected r[0-7], got ' + args[2];
+          return throwCompilerError('Invalid operand 3 for MUL. Expected r[0-7], got ' + args[2]);
         } else if (args[0] !== args[1] && args[0] !== args[2]) {
-          return 'Destination register must be the same as one of the source registers for MUL.';
+          return throwCompilerError('Destination register must be the same as one of the source registers for MUL.');
         }
 
         // CASE: mul r2, r2, r3
@@ -655,20 +665,20 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.CMP: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for CMP. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for CMP. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for CMP. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for CMP. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined) {
-        return 'Invalid operand 2 for CMP. Expected register r[0-15] or #Inm8, got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for CMP. Expected register r[0-15] or #Inm8, got ' + args[1]);
       }
 
       if (isInmediateValue(op2Type) && isOutOfRange(args[1], 255)) {
-        return 'Invalid inmediate for CMP. Number out of range. Expected 0-255 but got ' + args[1];
+        return throwCompilerError('Invalid inmediate for CMP. Number out of range. Expected 0-255 but got ' + args[1]);
       }
 
       // CASE: cmp r1, [r2 | #Inm8]
@@ -684,16 +694,16 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.CMN: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for CMP. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for CMP. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for CMN. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for CMN. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for CMN. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for CMN. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: cmn r1, r2
@@ -709,15 +719,15 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.AND: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for AND. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for AND. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for AND. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for AND. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for AND. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for AND. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: and r1, r2
@@ -733,15 +743,15 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.BIC: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for BIC. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for BIC. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for BIC. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for BIC. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for BIC. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for BIC. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: bic r1, r2
@@ -757,15 +767,15 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.ORR: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for ORR. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for ORR. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for ORR. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for ORR. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for ORR. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for ORR. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: orr r1, r2
@@ -781,15 +791,15 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.EOR: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for EOR. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for EOR. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for EOR. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for EOR. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for EOR. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for EOR. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: eor r1, r2
@@ -805,15 +815,15 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.MVN: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for MVN. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for MVN. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for MVN. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for MVN. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for MVN. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for MVN. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: mvn r1, r2
@@ -829,15 +839,15 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.TST: {
       if (args.length !== 2) {
-        return "Invalid number of arguments for TST. Expected 2, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for TST. Expected 2, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
       const op2Type = operandToOptype(args[1]);
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for TST. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for TST. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for TST. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for TST. Expected register r[0-15], got ' + args[1]);
       }
 
       // CASE: tst r1, r2
@@ -853,7 +863,7 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.LSL: {
       if (args.length !== 3) {
-        return "Invalid number of arguments for LSL. Expected 3, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for LSL. Expected 3, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -861,13 +871,13 @@ function lineToInstruction(line: string): Instruction | string {
       const op3Type = operandToOptype(args[2]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for LSL. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for LSL. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for LSL. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for LSL. Expected register r[0-15], got ' + args[1]);
       } else if (op3Type === undefined || (!isLowHighRegister(op3Type) && !isInmediateValue(op3Type))) {
-        return 'Invalid operand 3 for LSL. Expected register r[0-15] or #0-31, got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for LSL. Expected register r[0-15] or #0-31, got ' + args[2]);
       } else if (isInmediateValue(op3Type) && isOutOfRange(args[2], 31)) {
-        return 'Invalid operand 3 for LSL. Number must be between 0 and 31, got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for LSL. Number must be between 0 and 31, got ' + args[2]);
       }
 
       // CASE: lsl r1, r2
@@ -884,7 +894,7 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.LSR: {
       if (args.length !== 3) {
-        return "Invalid number of arguments for LSR. Expected 3, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for LSR. Expected 3, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -892,13 +902,13 @@ function lineToInstruction(line: string): Instruction | string {
       const op3Type = operandToOptype(args[2]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for LSR. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for LSR. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for LSR. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for LSR. Expected register r[0-15], got ' + args[1]);
       } else if (op3Type === undefined || (!isLowHighRegister(op3Type) && !isInmediateValue(op3Type))) {
-        return 'Invalid operand 3 for LSR. Expected register r[0-15] or #0-31, got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for LSR. Expected register r[0-15] or #0-31, got ' + args[2]);
       } else if (isInmediateValue(op3Type) && isOutOfRange(args[2], 31)) {
-        return 'Invalid operand 3 for LSR. Number must be between 0 and 31, got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for LSR. Number must be between 0 and 31, got ' + args[2]);
       }
 
       // CASE: lsr r1, r2
@@ -915,7 +925,7 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.ASR: {
       if (args.length !== 3) {
-        return "Invalid number of arguments for ASR. Expected 3, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for ASR. Expected 3, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -923,13 +933,13 @@ function lineToInstruction(line: string): Instruction | string {
       const op3Type = operandToOptype(args[2]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for ASR. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for ASR. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for ASR. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for ASR. Expected register r[0-15], got ' + args[1]);
       } else if (op3Type === undefined || (!isLowHighRegister(op3Type) && !isInmediateValue(op3Type))) {
-        return 'Invalid operand 3 for ASR. Expected register r[0-15] or #0-31, got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for ASR. Expected register r[0-15] or #0-31, got ' + args[2]);
       } else if (isInmediateValue(op3Type) && isOutOfRange(args[2], 31)) {
-        return 'Invalid operand 3 for ASR. Number must be between 0 and 31, got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for ASR. Number must be between 0 and 31, got ' + args[2]);
       }
 
       // CASE: asr r1, r2
@@ -946,7 +956,7 @@ function lineToInstruction(line: string): Instruction | string {
 
     case Operation.ROR: {
       if (args.length !== 3) {
-        return "Invalid number of arguments for ROR. Expected 3, got " + args.length;
+        return throwCompilerError('Invalid number of arguments for ROR. Expected 3, got ' + args.length);
       }
 
       const op1Type = operandToOptype(args[0]);
@@ -954,11 +964,11 @@ function lineToInstruction(line: string): Instruction | string {
       const op3Type = operandToOptype(args[2]);
 
       if (op1Type === undefined || !isLowHighRegister(op1Type)) {
-        return 'Invalid operand 1 for ROR. Expected register r[0-15], got ' + args[0];
+        return throwCompilerError('Invalid operand 1 for ROR. Expected register r[0-15], got ' + args[0]);
       } else if (op2Type === undefined || !isLowHighRegister(op2Type)) {
-        return 'Invalid operand 2 for ROR. Expected register r[0-15], got ' + args[1];
+        return throwCompilerError('Invalid operand 2 for ROR. Expected register r[0-15], got ' + args[1]);
       } else if (op3Type === undefined || !isLowHighRegister(op3Type)) {
-        return 'Invalid operand 3 for ROR. Expected register r[0-15], got ' + args[2];
+        return throwCompilerError('Invalid operand 3 for ROR. Expected register r[0-15], got ' + args[2]);
       }
 
       // CASE: ror r1, r2
@@ -982,10 +992,6 @@ function compileAssembly(source: string): [Program, number[]] {
   const labels: { [key: string]: number } = {};
   const lines = source.split('\n');
   let inTextSection = true;
-  const program: Program = {
-    ins: [],
-    error: undefined,
-  }
 
   for (let i = 0; i < lines.length; i++) {
     // Delete comments and lowercase assembly
@@ -1029,21 +1035,28 @@ function compileAssembly(source: string): [Program, number[]] {
       }
 
       break;
+    } else if (directive !== undefined && inTextSection && dataDirectives.find((el) => el === directive)) {
+      program.error = {
+        line: i + 1,
+        message: "Data directives not supported in text section",
+      }
+
+      break;
     }
 
     if (operation !== undefined) {
       const instruction = lineToInstruction(lines[i].toLowerCase());
-      if (typeof instruction === 'string') {
-        program.error = {
-          line: i + 1,
-          message: instruction,
-        };
-
+      if (program.error !== undefined) {
+        program.error.line = i + 1;
         break;
       }
 
-      instruction.label = label;
-      program.ins.push(instruction);
+      // This should always be true since we already checked if there is an error
+      // The linter forces to ensure instruction !== undefined
+      if (instruction !== undefined) {
+        instruction.label = label;
+        program.ins.push(instruction);
+      }
     } else if (directive !== undefined) {
       if (wordToDirective[firstWord] === Directive.TEXT) {
         inTextSection = true;
@@ -1057,13 +1070,9 @@ function compileAssembly(source: string): [Program, number[]] {
         continue;
       }
 
-      const directive = compileDirective(lines[i]);
-      if (typeof directive === 'string') {
-        program.error = {
-          line: i + 1,
-          message: directive,
-        }
-
+      compileDirective(lines[i]);
+      if (program.error !== undefined) {
+        program.error.line = i + 1;
         break;
       }
     } else {
@@ -1077,13 +1086,15 @@ function compileAssembly(source: string): [Program, number[]] {
 
   }
 
-  const retMem = [...memory];
+  const retMemory = [...memory];
+  const retProgram = { ...program };
 
   resetCompiler();
-  return [program, retMem];
+  return [retProgram, retMemory];
 }
 
 function resetCompiler() {
+  program = { ins: [], error: undefined }
   memByteIndex = 0;
   symbols = {}
   memory = []
