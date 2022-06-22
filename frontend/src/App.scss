@@ -46,10 +46,12 @@
 }
 
 .menu {
-  margin-bottom: 1rem;
-  margin-top: 1rem;
+  margin: 1rem;
+  display: flex;
+  flex-direction: row;
 }
 
 .menu-button {
-  margin: 2px;
+  flex: 1 0 auto;
+  margin: 5px;
 }

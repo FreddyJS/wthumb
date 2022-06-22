@@ -30,6 +30,7 @@ const Registers = () => {
   const saveRegister = () => {
     dispatch(updateRegister({ register: selectedRegister, value: Number(registerValue) }));
     setRegisterValue('');
+    setIsValidValue(false);
   }
 
   const onChangeRegisterValue = (value: string) => {
@@ -44,7 +45,7 @@ const Registers = () => {
 
   const registerMenu = (
     <Popover id="popover-basic">
-      <Popover.Header as="h3">Register {selectedRegister}</Popover.Header>
+      <Popover.Header as="h3">Register {selectedRegister.toUpperCase()}</Popover.Header>
       <Popover.Body>
         <Form onSubmit={(e) => e.preventDefault()}>
           <FormGroup>
@@ -62,8 +63,7 @@ const Registers = () => {
               Not a valid 32 bits number.
               {Number(registerValue) > 0xFFFFFFFF ? " Number too big" : Number(registerValue) < 0x0 ? " No negative numbers" : " Not a Number"}
             </Form.Control.Feedback>
-            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
-            <Form.Text id="valuehelp" muted>New value of register. 32 bits number.</Form.Text>
+            <Form.Text id="valuehelp" muted>New value of register. A 32 bits number.</Form.Text>
 
           </FormGroup>
 
