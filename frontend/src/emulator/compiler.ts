@@ -1,4 +1,4 @@
-import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue, Operand, wordToDirective, Directive, dataDirectives } from './types';
+import { Operation, OperandType, wordToOperation, isLowHighRegister, isInmediateValue, Operand, wordToDirective, Directive, dataDirectives, directiveToWord } from './types';
 import type { Program, Instruction } from './types';
 
 
@@ -117,9 +117,11 @@ function compileDirective(line: string) {
         }
 
         for (let i = 0; i < args.length; i++) {
-          let value = Number(args[i]) >>> 0;
+          // TODO: numbers bigger than 0xFFFFFFFF may cause problems
+          // Tested with 0xFFFFFFFFFFFFFFFF and it doesn't load correctly
+          let value = Number(args[i]);
           if (value === undefined) {
-            return throwCompilerError('Invalid value \'' + args[i] + '\' for the .byte directive');
+            return throwCompilerError('Invalid value \'' + args[i] + '\' for the' + directiveToWord[directive] + 'directive');
           }
 
           while (savedBytes !== bytesToSave) {
