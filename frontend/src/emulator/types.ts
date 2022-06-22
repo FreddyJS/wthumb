@@ -102,27 +102,58 @@ type Instruction = {
 
 // Assembler directives
 enum Directive {
+  ALIGN,
+  BALIGN,
+  ASCII,
+  ASCIZ,
   TEXT,
   DATA,
+  BYTE,
+  HWORD,
+  WORD,
+  QUAD,
+  SPACE,
   EQUIV,
   EQV,
   EQU,
+  SET,
+  TOTAL_DIRECTIVES,
 }
 
 const wordToDirective: { [key: string]: Directive } = {
+  ".align": Directive.ALIGN,
+  ".balign": Directive.BALIGN,
+  ".ascii": Directive.ASCII,
+  ".asciz": Directive.ASCIZ,
   ".text": Directive.TEXT,
   ".data": Directive.DATA,
+  ".byte": Directive.BYTE,
+  ".hword": Directive.HWORD,
+  ".word": Directive.WORD,
+  ".quad": Directive.QUAD,
+  ".space": Directive.SPACE,
   ".equiv": Directive.EQUIV,
   ".eqv": Directive.EQUIV,
   ".equ": Directive.EQU,
+  ".set": Directive.SET,
 }
 
 const directiveToWord: { [key: number]: string } = {
+  [Directive.ALIGN]: ".align",
+  [Directive.BALIGN]: ".balign",
+  [Directive.ASCII]: ".ascii",
+  [Directive.ASCIZ]: ".asciz",
   [Directive.TEXT]: ".text",
   [Directive.DATA]: ".data",
+  [Directive.BYTE]: ".byte",
+  [Directive.HWORD]: ".hword",
+  [Directive.WORD]: ".word",
+  [Directive.QUAD]: ".quad",
+  [Directive.SPACE]: ".space",
   [Directive.EQUIV]: ".equiv",
   [Directive.EQV]: ".eqv",
   [Directive.EQU]: ".equ",
+  [Directive.SET]: ".set",
 }
 
 // Program

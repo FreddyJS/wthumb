@@ -4,6 +4,8 @@ import type { Program, Instruction } from './types';
 
 // Object with the symbols defined by the user with .equiv, .eqv y .equ
 let symbols: { [key: string]: string } = {}
+let memory: number[] = []
+let memByteIndex = 0
 
 const assert = (condition: boolean, message: string) => {
   if (!condition) {
@@ -46,22 +48,29 @@ function stripComments(source: string) {
 }
 
 function cleanInput(source: string): string {
-  return stripComments(source).toLowerCase();
+  return stripComments(source);
 }
 
 function compileDirective(line: string) {
-  const directive = wordToDirective[line.split(' ')[0]];
-  line = line.split(' ').slice(1).join('');
+  let directive = wordToDirective[line.split(' ')[0]];
+  line = line.split(' ').slice(1).join(' ').trim();
 
+  assert(Directive.TOTAL_DIRECTIVES === 15, 'Exhaustive handling of directives in compileDirective');
   switch (directive) {
     case Directive.EQUIV:
     case Directive.EQV:
     case Directive.EQU:
+    case Directive.SET:
       {
-        const args = line.split(',');
+        const args = line.split(',').map((arg) => arg.trim());
         if (args.length !== 2) {
           return "Invalid number of args for directive. Expected 2, got " + args.length;
         }
+
+        // Directive.EQV = Directive.EQUIV
+        directive = directive === Directive.EQV ? Directive.EQUIV : directive;
+        // Directive.SET = Directive.EQU
+        directive = directive === Directive.SET ? Directive.EQU : directive;
 
         const [symbol, value] = args;
         if (directive !== Directive.EQU && symbols[symbol] !== undefined) {
@@ -73,6 +82,121 @@ function compileDirective(line: string) {
         symbols[symbol] = value;
         return
       }
+
+    case Directive.BYTE:
+    case Directive.HWORD:
+    case Directive.WORD:
+    case Directive.QUAD:
+      {
+        const args = line.split(',').map((arg) => arg.trim());
+        if (args.length === 0) {
+          return "No value provided for the .byte directive";
+        }
+
+        let bytesToSave = 1;
+        let savedBytes = 0;
+        if (directive === Directive.HWORD) {
+          bytesToSave = 2;
+        } else if (directive === Directive.WORD) {
+          bytesToSave = 4;
+        } else if (directive === Directive.QUAD) {
+          bytesToSave = 8;
+        }
+
+        for (let i = 0; i < args.length; i++) {
+          let value = Number(args[i]) >>> 0;
+          if (value === undefined) {
+            return "Invalid value '" + args[i] + " for the .byte directive";
+          }
+
+          while (savedBytes !== bytesToSave) {
+            const memIndex = Math.floor(memByteIndex / 4);
+            const shifts = (memByteIndex % 4) * 8;
+            const byte = value & 0xFF;
+
+            memory[memIndex] = (memory[memIndex] | (byte << shifts)) >>> 0
+            value = value >>> 8;
+            memByteIndex++;
+            savedBytes++;
+          }
+
+          savedBytes = 0;
+        }
+
+        return
+      }
+
+    case Directive.SPACE:
+      {
+        const args = line.split(' ').map((arg) => arg.trim());
+        if (args.length !== 1) {
+          return "Invalid number of arguments for SPACE. Expected 1";
+        }
+
+        const N = Number(args[0]);
+        for (let i = 0; i < N; i++) {
+          const memIndex = Math.floor(memByteIndex / 4);
+          const shifts = (memByteIndex % 4) * 8;
+          memory[memIndex] = (memory[memIndex] | (0x00 << shifts)) >>> 0
+          memByteIndex++;
+        }
+
+        return
+      }
+
+    case Directive.ALIGN:
+    case Directive.BALIGN:
+      {
+        const args = line.split(' ');
+        if (args.length !== 1) {
+          return "Invalid number of arguments for ALIGN. Expected 1";
+        }
+
+        const N = Number(args[0]);
+        const base = directive === Directive.BALIGN ? N : 2 ** N;
+        if (N === undefined) {
+          return "Invalid value for alignment";
+        } else if (directive === Directive.ALIGN && N > 15) {
+          return "Invalid value for ALIGN argument. Expected number 0-15";
+        } else if (directive === Directive.BALIGN && ((Math.log2(N) % 1) !== 0)) {
+          console.log("SQRT: " + N + " - " + Math.sqrt(N))
+          return "Invalid value for BALIGN argument. Number not a power of 2";
+        }
+
+        while ((memByteIndex % base) !== 0) {
+          memByteIndex++;
+        }
+
+        return
+      }
+
+    case Directive.ASCII:
+    case Directive.ASCIZ:
+      {
+        if (!/^"\w+(\s+\w+)*"$/.test(line)) {
+          return "Invalid string value. Use \"Hello\"";
+        }
+
+        line = line.replace('"', '').replace('"', '');
+
+        for (let i = 0; i < line.length; i++) {
+          const memIndex = Math.floor(memByteIndex / 4);
+          const shifts = (memByteIndex % 4) * 8;
+
+          memory[memIndex] = (memory[memIndex] | (line.charCodeAt(i) << shifts)) >>> 0;
+          memByteIndex++;
+        }
+
+        if (directive === Directive.ASCIZ) {
+          const memIndex = Math.floor(memByteIndex / 4);
+          const shifts = (memByteIndex % 4) * 8;
+          memory[memIndex] = (memory[memIndex] | (0x00 << shifts)) >>> 0;
+          memByteIndex++;
+        }
+
+        return
+      }
+
     default:
       throw new Error('Unreachable code in compileDirective. Caused by: ' + directive);
   }
@@ -854,7 +978,7 @@ function lineToInstruction(line: string): Instruction | string {
   }
 }
 
-function compileAssembly(source: string): Program {
+function compileAssembly(source: string): [Program, number[]] {
   const labels: { [key: string]: number } = {};
   const lines = source.split('\n');
   let inTextSection = true;
@@ -870,7 +994,7 @@ function compileAssembly(source: string): Program {
     // Skip empty lines
     if (lines[i] === '') continue;
 
-    let firstWord = lines[i].split(' ')[0];
+    let firstWord = lines[i].split(' ')[0].toLowerCase();
     let operation = wordToOperation[firstWord];
     let directive = wordToDirective[firstWord];
     let label = /^\w+:/.test(lines[i]) ? lines[i].split(':')[0] : undefined;
@@ -908,13 +1032,13 @@ function compileAssembly(source: string): Program {
     }
 
     if (operation !== undefined) {
-      const instruction = lineToInstruction(lines[i]);
+      const instruction = lineToInstruction(lines[i].toLowerCase());
       if (typeof instruction === 'string') {
         program.error = {
           line: i + 1,
           message: instruction,
         };
-  
+
         break;
       }
 
@@ -939,6 +1063,8 @@ function compileAssembly(source: string): Program {
           line: i + 1,
           message: directive,
         }
+
+        break;
       }
     } else {
       program.error = {
@@ -951,8 +1077,16 @@ function compileAssembly(source: string): Program {
 
   }
 
+  const retMem = [...memory];
+
+  resetCompiler();
+  return [program, retMem];
+}
+
+function resetCompiler() {
+  memByteIndex = 0;
   symbols = {}
-  return program;
+  memory = []
 }
 
 export default compileAssembly;
