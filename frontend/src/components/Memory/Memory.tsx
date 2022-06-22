@@ -17,8 +17,8 @@ const Memory = () => {
       rows.push(
         <tr key={i}>
           {/* Address and value in hexadecimal with at least 2 digits*/}
-          <td>0x{(i*4).toString(16).padStart(8, '0')}</td>
-          <td>0x{memory[i].toString(16).padStart(8, '0')}</td>
+          <td>0x{(i*4).toString(16).padStart(8, '0').toUpperCase()}</td>
+          <td>0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}</td>
         </tr>
       );
     }

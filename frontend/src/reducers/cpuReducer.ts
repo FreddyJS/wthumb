@@ -3,7 +3,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { RootState } from 'store';
 import { armCPU } from 'hooks';
-import { armCPU_T, compileAssembly } from 'emulator';
+import { armCPU_T } from 'emulator';
 import { CompilerError } from 'emulator/types';
 
 type SliceState  = {
@@ -27,23 +27,21 @@ export const cpuSlice = createSlice({
       state.error = action.payload;
     },
     updateProgram: (state, action) => {
-      const program = compileAssembly(action.payload);
-      if (program.error) {
-        state.error = program.error;
+      state.cpu.loadAssembly(action.payload);
+      if (state.cpu.error) {
+        state.error = state.cpu.error;
       } else {
         state.error = undefined;
-        state.cpu.program = program.ins;
       }
     },
     runCode: (state, action) => {
-      const program = compileAssembly(action.payload);
-      if (program.error) {
-        state.error = program.error;
+      state.cpu.reset();
+      state.cpu.loadAssembly(action.payload);
+      if (state.cpu.error) {
+        state.error = state.cpu.error;
       } else {
-        state.cpu.reset();
-        state.cpu.load(program);
-        state.cpu.run();
         state.error = undefined;
+        state.cpu.run();
       }
     },
     step: (state) => {
