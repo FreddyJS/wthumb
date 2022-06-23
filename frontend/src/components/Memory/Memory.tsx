@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from 'hooks';
 const Memory = () => {
   const memory = useAppSelector(selectMemory);
   const dispatch = useAppDispatch();
-  const [selectedMemoryAddress, setSelectedMemoryAddress] = useState(0);
+  const [selectedMemoryAddress, setSelectedMemoryAddress] = useState(-1);
   const [memoryValue, setMemoryValue] = useState('');
   const [isValidValue, setIsValidValue] = useState(false);
 
@@ -39,7 +39,7 @@ const Memory = () => {
     setMemoryValue(value.toUpperCase().replace("X", "x"));
   }
 
-  const memoryMenu = (
+  const memoryMenu = selectedMemoryAddress === -1 ? (<></>) : (
     <Popover id="popover-basic">
       <Popover.Header as="h3">Memory at 0x{selectedMemoryAddress.toString(16).padStart(8, '0').toUpperCase()}</Popover.Header>
       <Popover.Body>
@@ -77,7 +77,7 @@ const Memory = () => {
     for (let i = 0; i < memory.length; i++) {
       const address = i * 4;
       rows.push(
-        <OverlayTrigger key={"memoverlay" + i} trigger="click" placement="left" overlay={memoryMenu} rootClose={true}>
+        <OverlayTrigger key={"memoverlay" + i} trigger="click" placement="left" overlay={memoryMenu} rootClose={true} show={address === selectedMemoryAddress}>
           <tr key={i} onClick={() => setSelectedMemoryAddress(address)}>
             {/* Address and value in hexadecimal with at least 2 digits*/}
             <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
@@ -97,7 +97,7 @@ const Memory = () => {
       <div className="memory-header">
         <h3>Memory Layout</h3>
       </div>
-      <div className="memory-container">
+      <div className="memory-container" onScroll={() => setSelectedMemoryAddress(-1)}>
         <Table striped bordered hover>
           <thead>
             <tr>
