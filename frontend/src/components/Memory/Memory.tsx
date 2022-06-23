@@ -13,12 +13,14 @@ import { useAppDispatch, useAppSelector } from 'hooks';
 
 
 const Memory = () => {
-  const memory = useAppSelector(selectMemory);
-  const [selectedMemoryAddress, setSelectedMemoryAddress] = useState(-1);
-
   const dispatch = useAppDispatch();
+  const memory = useAppSelector(selectMemory);
+  const memorySize = useAppSelector((state) => state.cpu.cpu.memSize);
+  
+  const [selectedMemoryAddress, setSelectedMemoryAddress] = useState(-1);
   const [memoryValue, setMemoryValue] = useState('');
   const [isValidValue, setIsValidValue] = useState(false);
+  const [mode, setMode] = useState('all');
 
   if (memory === undefined) {
     return <div>Loading...</div>
@@ -38,6 +40,18 @@ const Memory = () => {
     }
 
     setMemoryValue(value.toUpperCase().replace("X", "x"));
+  }
+
+  const wordToString = (value: number)  => {
+    let str = '';
+    for (let i = 0; i < 4; i++) {
+      const byte = value & 0xFF;
+      value = value >>> 8;
+
+      str = str + String.fromCharCode(byte);
+    }
+
+    return str;
   }
 
   const memoryMenu = selectedMemoryAddress === -1 ? (<></>) : (
@@ -75,8 +89,14 @@ const Memory = () => {
 
   const tableRows = () => {
     let rows: JSX.Element[] = []
-    for (let i = 0; i < memory.length; i++) {
+    const start = mode === 'stack' ? memorySize : 0;
+    const end = mode === 'data' ? memorySize : memory.length;
+
+    for (let i = start; i < end; i++) {
       const address = i * 4;
+      const endAddress = address + 3;
+      const strAddress = '0x' + (address).toString(16).padStart(8, '0').toUpperCase();
+      const strEndAddress = '0x' + (endAddress).toString(16).padStart(8, '0').toUpperCase();
 
       if (selectedMemoryAddress === address) {
         rows.push(
@@ -89,10 +109,13 @@ const Memory = () => {
                 }
               }}>
               {/* Address and value in hexadecimal with at least 2 digits*/}
-              <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
-                <td>
-                  0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
-                </td>
+              <td>{strAddress} - {strEndAddress}</td>
+              <td>
+                0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
+              </td>
+              <td>
+                {wordToString(memory[i])}
+              </td>
             </tr>
           </OverlayTrigger>
         );
@@ -100,10 +123,13 @@ const Memory = () => {
         rows.push(
             <tr key={i} onClick={() => setSelectedMemoryAddress(address)}>
               {/* Address and value in hexadecimal with at least 2 digits*/}
-              <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
-                <td>
-                  0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
-                </td>
+              <td>{strAddress} - {strEndAddress}</td>
+              <td>
+                0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
+              </td>
+              <td>
+                {wordToString(memory[i])}
+              </td>
             </tr>
         );
       }
@@ -115,14 +141,22 @@ const Memory = () => {
   return (
     <div className="memory">
       <div className="memory-header">
-        <h3>Memory Layout</h3>
+        <div className="memory-menu">
+          <h5>Memory Sections</h5>
+
+          <Button variant="outline-secondary" onClick={() => setMode('all')} active={mode === 'all'}>All</Button>{' '}
+          <Button variant="outline-secondary" onClick={() => setMode('data')} active={mode === 'data'}>Data</Button>{' '}
+          <Button variant="outline-secondary" onClick={() => setMode('stack')} active={mode === 'stack'}>Stack</Button>{' '}
+        </div>
+      
       </div>
       <div className="memory-container" onScroll={() => setSelectedMemoryAddress(-1)}>
-        <Table striped bordered hover>
+        <Table striped hover>
           <thead>
             <tr>
-              <th>#</th>
+              <th>Address</th>
               <th>Value</th>
+              <th>String</th>
             </tr>
           </thead>
           <tbody>
