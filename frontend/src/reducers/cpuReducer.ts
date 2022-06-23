@@ -24,7 +24,9 @@ export const cpuSlice = createSlice({
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
     setError: (state, action) => {
+      console.log(action)
       state.error = action.payload;
+      state.cpu.error = action.payload;
     },
     updateProgram: (state, action) => {
       state.cpu.loadAssembly(action.payload);

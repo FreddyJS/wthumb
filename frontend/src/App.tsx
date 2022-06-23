@@ -82,8 +82,8 @@ function App() {
       {error !== undefined ? 
         <ToastContainer position="top-end" className="p-3">
           <Toast bg="danger">
-            <Toast.Header>
-              <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
+            <Toast.Header onClick={() => dispatch(setError(undefined))}>
+              <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
               <strong className="me-auto">Asembler Error</strong>
               <small className="text-muted">Line {error.line}</small>
             </Toast.Header>
@@ -99,11 +99,11 @@ function App() {
 
       <div className="content">
         <div className="menu">
-            <Button className="menu-button" variant="outline-primary" onClick={startEmul}>Run</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={startEmul}>Run Program</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset()); dispatch(updateProgram(code))}}>Load Program</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(step())}}>Step</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>Help</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(step())}}>Step Into</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset CPU</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>ARM Help</Button>
             <Help show={showHelp} onClose={() => setShowHelp(false)}/>
         </div>
 
