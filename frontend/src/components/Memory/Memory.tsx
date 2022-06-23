@@ -78,10 +78,10 @@ const Memory = () => {
       const address = i * 4;
       rows.push(
         <OverlayTrigger key={"memoverlay" + i} trigger="click" placement="left" overlay={memoryMenu} rootClose={true}>
-          <tr key={i}>
+          <tr key={i} onClick={() => setSelectedMemoryAddress(address)}>
             {/* Address and value in hexadecimal with at least 2 digits*/}
             <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
-              <td onClick={() => setSelectedMemoryAddress(address)}>
+              <td>
                 0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
               </td>
           </tr>
