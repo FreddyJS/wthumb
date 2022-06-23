@@ -218,6 +218,7 @@ function compileInstruction(line: string) {
     operation: operation,
     name: operationToWord[operation],
     operands: [],
+    break: false,
   }
 
   assert(Operation.TOTAL_OPERATIONS === 17, 'Exhaustive handling of operations in lineToInstruction');

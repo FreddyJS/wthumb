@@ -71,7 +71,13 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
     // Methods
     run() {
-      for (const ins of this.program) {
+      for (let i = this.regs[PCREGISTER]/2; i < this.program.length; i++) {
+        const ins = this.program[i];
+        if (ins.break === true) {
+          ins.break = false;
+          return;
+        }
+
         this.execute(ins);
         this.regs[PCREGISTER] += 2;
       }
@@ -105,8 +111,6 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       if (program.error) {
         this.error = program.error;
         return console.error("[armthumb]: ", program.error);
-      } else {
-        this.error = undefined;
       }
 
       this.program = program.ins;

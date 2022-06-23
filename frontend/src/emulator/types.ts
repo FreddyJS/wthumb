@@ -97,6 +97,7 @@ type Instruction = {
   operation: Operation;
   name: string;
   operands: Operand[];
+  break: boolean;
   label?: string;
 };
 
