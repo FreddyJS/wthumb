@@ -111,8 +111,7 @@ function App() {
         <Toast bg="warning" delay={3000} autohide={true} onClose={() => setToastMessage('')}>
           <Toast.Header>
             <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
-            <strong className="me-auto">Assembler Error</strong>
-            <small className="text-muted">Line 0</small>
+            <strong className="me-auto">Emulator Warning</strong>
           </Toast.Header>
           <Toast.Body>
             {toastMessage.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
@@ -126,8 +125,7 @@ function App() {
         <Toast bg="success" delay={3000} autohide={true} onClose={() => setToastMessage('')}>
           <Toast.Header>
             <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
-            <strong className="me-auto">Assembler Error</strong>
-            <small className="text-muted">Line 0</small>
+            <strong className="me-auto">Emulator Message</strong>
           </Toast.Header>
           <Toast.Body>
             {toastMessage.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
@@ -166,7 +164,7 @@ function App() {
         <div className='content-code'>          
           <Program/>
           <CodeEditor value={code} placeHolder="Type your code here..." onChange={(text) => {setCode(text)}}/>
-          <div style={{display: "flex", flexDirection: "column", flex: "1 0 auto", height: "100%"}}>
+          <div style={{ height: "100%" }}>
             <Registers/>
             <Memory/>
           </div>

@@ -15,23 +15,21 @@ type CodeEditorProps = {
 
 const CodeEditor = ({ value, placeHolder, onChange }: CodeEditorProps) => {
   return (
-    <div className="code-editor">
-      <CodeMirror
-        placeholder={placeHolder}
-        value={value}
-        theme='light'
-        style={{
-          textAlign: "left",
-          height: "100%",
-          overflow: "auto"
-        }}
-        extensions={[StreamLanguage.define(armthumb)]}
-        onChange={(value, viewUpdate) => {
-          onChange(value);
-        }}
-      />
-      {/* <textarea id="ce-textarea" className="ce-textarea" placeholder={placeHolder} onChange={onChangeHandler} onKeyDown={onKeyDownHandler}/> */}
-    </div>
+    <CodeMirror
+      className="code-editor"
+      placeholder={placeHolder}
+      value={value}
+      theme='light'
+      style={{
+        // textAlign: "left",
+        height: "100%",
+        // overflow: "auto"
+      }}
+      extensions={[StreamLanguage.define(armthumb)]}
+      onChange={(value, viewUpdate) => {
+        onChange(value);
+      }}
+    />
   );
 };
 

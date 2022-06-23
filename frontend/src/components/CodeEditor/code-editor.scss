@@ -1,17 +1,11 @@
 .code-editor {
-    justify-content: center;
-    max-width: 100%;
-    max-height: 100%;
-    flex: 2 0 auto;
-    border: 1px dotted #000;
-}
-
-.ce-textarea {
-    padding: 10px;
-    resize: none;
-    border: 1px solid #ccc;
-}
-
-.cm-editor {
     height: 100%;
+    flex: 1 0 0px;
+    overflow: auto;
+    text-align: left;
+    border: 0.5px solid #000;
+
+    .cm-editor {
+        height: 100%;
+    }
 }
