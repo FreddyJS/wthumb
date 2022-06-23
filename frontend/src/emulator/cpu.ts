@@ -1,7 +1,8 @@
-import compileAssembly, { assert, parseInmediateOperand } from './compiler';
+import compileAssembly from './compiler';
 
-import { Operation, OperandType, Program, isInmediateValue, CompilerError } from './types';
 import type { Instruction } from './types';
+import { Operation, OperandType, Program, CompilerError } from './types';
+import { assert, inmediateOperandNumber, isInmediateType } from './utils';
 
 const defaultMemorySize = 64;
 const defaultStackSize = 64;
@@ -120,12 +121,12 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           {
             const [op1, op2] = ins.operands;
             const destReg = op1.value;
-            const value = isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value];
+            const value = isInmediateType(op2.type) ? inmediateOperandNumber(op2) : this.regs[op2.value];
 
             this.regs[destReg] = value;
             if (
               (op1.type === OperandType.LowRegister && op2.type === OperandType.LowRegister) ||
-              isInmediateValue(op2.type)
+              isInmediateType(op2.type)
             ) {
               this.setFlag(Flags.Z, value === 0);
               this.setFlag(Flags.N, value > maxPositiveValue);
@@ -141,9 +142,9 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             const sum1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
             const sum2 = op3 === undefined ?
-              isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value]
+              isInmediateType(op2.type) ? inmediateOperandNumber(op2) : this.regs[op2.value]
               :
-              isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
+              isInmediateType(op3.type) ? inmediateOperandNumber(op3) : this.regs[op3.value];
 
             if (sum1 + sum2 > maxUnsignedValue) {
               this.regs[destReg] = sum1 + sum2 - maxUnsignedValue - 1;
@@ -153,7 +154,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             }
             if (
               (op1.type === OperandType.LowRegister && op2.type === OperandType.LowRegister) ||
-              isInmediateValue(op2.type)
+              isInmediateType(op2.type)
             ) {
               this.setFlag(Flags.Z, this.regs[destReg] === 0);
               this.setFlag(Flags.N, this.regs[destReg] > maxPositiveValue);
@@ -169,9 +170,9 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             const res1 = op3 === undefined ? this.regs[op1.value] : this.regs[op2.value];
             const res2 = op3 === undefined ?
-              isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value]
+              isInmediateType(op2.type) ? inmediateOperandNumber(op2) : this.regs[op2.value]
               :
-              isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
+              isInmediateType(op3.type) ? inmediateOperandNumber(op3) : this.regs[op3.value];
 
             var carry = false;
             if (res1 - res2 < 0) {
@@ -230,7 +231,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           {
             const [op1, op2] = ins.operands;
             const cmp1 = this.regs[op1.value];
-            const cmp2 = isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value];
+            const cmp2 = isInmediateType(op2.type) ? inmediateOperandNumber(op2) : this.regs[op2.value];
             const value = cmp1 - cmp2;
 
             this.setFlag(Flags.Z, value === 0);
@@ -244,7 +245,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           {
             const [op1, op2] = ins.operands;
             const cmp1 = this.regs[op1.value];
-            const cmp2 = isInmediateValue(op2.type) ? parseInmediateOperand(op2) : this.regs[op2.value];
+            const cmp2 = isInmediateType(op2.type) ? inmediateOperandNumber(op2) : this.regs[op2.value];
 
             this.setFlag(Flags.Z, cmp1 === - cmp2);
             this.setFlag(Flags.N, cmp1 + cmp2 > maxPositiveValue);
@@ -324,7 +325,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const [op1, op2, op3] = ins.operands;
             const destReg = op1.value;
             let shiftValue = this.regs[op2.value];
-            const shifts = isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
+            const shifts = isInmediateType(op3.type) ? inmediateOperandNumber(op3) : this.regs[op3.value];
 
             let carry: boolean = false;
             for (let i = 0; i < shifts; i++) {
@@ -344,7 +345,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const [op1, op2, op3] = ins.operands;
             const destReg = op1.value;
             let shiftValue = this.regs[op2.value];
-            const shifts = isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
+            const shifts = isInmediateType(op3.type) ? inmediateOperandNumber(op3) : this.regs[op3.value];
 
             let carry: boolean = false;
             for (let i = 0; i < shifts; i++) {
@@ -364,7 +365,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const [op1, op2, op3] = ins.operands;
             const destReg = op1.value;
             let shiftValue = this.regs[op2.value];
-            const shifts = isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
+            const shifts = isInmediateType(op3.type) ? inmediateOperandNumber(op3) : this.regs[op3.value];
 
             let carry: boolean = false;
             for (let i = 0; i < shifts; i++) {
@@ -384,7 +385,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const [op1, op2, op3] = ins.operands;
             const destReg = op1.value;
             let shiftValue = this.regs[op2.value];
-            const shifts = isInmediateValue(op3.type) ? parseInmediateOperand(op3) : this.regs[op3.value];
+            const shifts = isInmediateType(op3.type) ? inmediateOperandNumber(op3) : this.regs[op3.value];
 
             let carry: boolean = false;
             for (let i = 0; i < shifts; i++) {

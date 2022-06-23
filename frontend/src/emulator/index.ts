@@ -1,6 +1,5 @@
 // CPU imports
-import defaultCPU from './cpu';
-import { armCPU_T } from './cpu';
+import defaultCPU, { armCPU_T } from './cpu';
 
 // Compiler imports
 import compileAssembly from './compiler';
@@ -8,7 +7,10 @@ import compileAssembly from './compiler';
 // Types imports
 import { Instruction, Operation, OperandType } from './types';
 
+// Utils imports
+import * as utils from './utils';
+
 // Module exports
 export default defaultCPU;
-export { compileAssembly, Operation, OperandType };
+export { Operation, OperandType, compileAssembly, utils };
 export type { Instruction, armCPU_T };

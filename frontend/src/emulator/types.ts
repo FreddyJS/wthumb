@@ -170,13 +170,5 @@ type Program = {
   ins: Instruction[];
 };
 
-function isLowHighRegister(type: OperandType): boolean {
-  return type === OperandType.LowRegister || type === OperandType.HighRegister || type === OperandType.SpRegister;
-}
-
-function isInmediateValue(type: OperandType): boolean {
-  return type === OperandType.HexInmediate || type === OperandType.DecInmediate;
-}
-
-export { Operation, OperandType, Directive, wordToOperation, operationToWord, wordToDirective, directiveToWord, dataDirectives, isLowHighRegister, isInmediateValue };
+export { Operation, OperandType, Directive, wordToOperation, operationToWord, wordToDirective, directiveToWord, dataDirectives };
 export type { CompilerError, Operand, Instruction, Program };
