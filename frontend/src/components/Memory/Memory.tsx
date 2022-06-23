@@ -14,8 +14,9 @@ import { useAppDispatch, useAppSelector } from 'hooks';
 
 const Memory = () => {
   const memory = useAppSelector(selectMemory);
-  const dispatch = useAppDispatch();
   const [selectedMemoryAddress, setSelectedMemoryAddress] = useState(-1);
+
+  const dispatch = useAppDispatch();
   const [memoryValue, setMemoryValue] = useState('');
   const [isValidValue, setIsValidValue] = useState(false);
 
@@ -40,18 +41,18 @@ const Memory = () => {
   }
 
   const memoryMenu = selectedMemoryAddress === -1 ? (<></>) : (
-    <Popover id="popover-basic">
+    <Popover id="popover-mem">
       <Popover.Header as="h3">Memory at 0x{selectedMemoryAddress.toString(16).padStart(8, '0').toUpperCase()}</Popover.Header>
       <Popover.Body>
         <Form onSubmit={(e) => e.preventDefault()}>
           <FormGroup>
-            <Form.Label htmlFor="inputPassword5">Memory value</Form.Label>
+            <Form.Label htmlFor="inputMemLabel">Memory value</Form.Label>
             <Form.Control
               placeholder={"0x" + memory[selectedMemoryAddress/4].toString(16).padStart(8, '0').toUpperCase()}
               isInvalid={!isValidValue}
               isValid={isValidValue}
               value={memoryValue}
-              id="newregval"
+              id="newmemval"
               type="text"
               onChange={(e) => onChangeMemoryValue(e.target.value)}
             />
@@ -76,17 +77,36 @@ const Memory = () => {
     let rows: JSX.Element[] = []
     for (let i = 0; i < memory.length; i++) {
       const address = i * 4;
-      rows.push(
-        <OverlayTrigger key={"memoverlay" + i} trigger="click" placement="left" overlay={memoryMenu} rootClose={true} show={address === selectedMemoryAddress}>
-          <tr key={i} onClick={() => setSelectedMemoryAddress(address)}>
-            {/* Address and value in hexadecimal with at least 2 digits*/}
-            <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
-              <td>
-                0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
-              </td>
-          </tr>
-        </OverlayTrigger>
-      );
+
+      if (selectedMemoryAddress === address) {
+        rows.push(
+          <OverlayTrigger key={"memoverlay" + i} placement="left" overlay={memoryMenu} rootClose={true} show={true}>
+            <tr key={i} style={{ backgroundColor: selectedMemoryAddress === address ? "#c3e6cb" : "" }} onClick={() => {
+                if (selectedMemoryAddress === address) {
+                  setSelectedMemoryAddress(-1)
+                } else {
+                  setSelectedMemoryAddress(address)
+                }
+              }}>
+              {/* Address and value in hexadecimal with at least 2 digits*/}
+              <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
+                <td>
+                  0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
+                </td>
+            </tr>
+          </OverlayTrigger>
+        );
+      } else {
+        rows.push(
+            <tr key={i} onClick={() => setSelectedMemoryAddress(address)}>
+              {/* Address and value in hexadecimal with at least 2 digits*/}
+              <td>0x{(address).toString(16).padStart(8, '0').toUpperCase()}</td>
+                <td>
+                  0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
+                </td>
+            </tr>
+        );
+      }
     }
 
     return rows;

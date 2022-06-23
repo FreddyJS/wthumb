@@ -44,12 +44,12 @@ const Registers = () => {
   }
 
   const registerMenu = (
-    <Popover id="popover-basic">
+    <Popover id="popover-reg">
       <Popover.Header as="h3">Register {selectedRegister.toUpperCase()}</Popover.Header>
       <Popover.Body>
         <Form onSubmit={(e) => e.preventDefault()}>
           <FormGroup>
-            <Form.Label htmlFor="inputPassword5">Register value</Form.Label>
+            <Form.Label htmlFor="inputRegValue">Register value</Form.Label>
             <Form.Control
               placeholder={"0x" + regs[selectedRegister].toString(16).padStart(8, '0').toUpperCase()}
               isInvalid={!isValidValue}
