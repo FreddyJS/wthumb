@@ -9,6 +9,8 @@ import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 import Popover from "react-bootstrap/Popover";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Table from 'react-bootstrap/Table';
+
 import { updateRegister } from "reducers/cpuReducer";
 
 const Registers = () => {
@@ -23,6 +25,7 @@ const Registers = () => {
   const [selectedRegister, setSelectedRegister] = useState('r0');
   const [registerValue, setRegisterValue] = useState('');
   const [isValidValue, setIsValidValue] = useState(false);
+  const [mode, setMode] = useState('hexadecimal');
 
   const regs_n = Object.keys(regs).length;
   const regs_per_row = 4;
@@ -43,10 +46,42 @@ const Registers = () => {
     setRegisterValue(value.toUpperCase().replace("X", "x"));
   }
 
+  const parseRegister = (register: string, format: string): string => {
+    if (format === 'hexadecimal') {
+      return '0x' + regs[register].toString(16).padStart(8, '0').toUpperCase();
+    } else if (format === 'signed') {
+      if ((regs[register] >> 0) < 0) {
+        return '-' + (-(regs[register] >> 0)).toString(10).padStart(9, '0');
+      } else {
+        return (regs[register] >> 0).toString(10).padStart(10, '0');
+      }
+    } else if (format === 'unsigned') {
+      return (regs[register] >>> 0).toString(10).padStart(10, '0');
+    }
+
+    return ''
+  }
+
   const registerMenu = (
     <Popover id="popover-reg">
       <Popover.Header as="h3">Register {selectedRegister.toUpperCase()}</Popover.Header>
       <Popover.Body>
+        <Table bordered>
+        <tbody>
+          <tr>
+            <td>Hex.</td>
+            <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'hexadecimal')}</Badge></td>
+          </tr>
+          <tr>
+            <td>Signed</td>
+            <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'signed')}</Badge></td>
+          </tr>
+          <tr>
+            <td>Unsigned</td>
+            <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'unsigned')}</Badge></td>
+          </tr>
+        </tbody>
+      </Table>
         <Form onSubmit={(e) => e.preventDefault()}>
           <FormGroup>
             <Form.Label htmlFor="inputRegValue">Register value</Form.Label>
@@ -83,7 +118,7 @@ const Registers = () => {
         <OverlayTrigger key={"regoverlay" + i} trigger="click" placement="left" overlay={registerMenu} rootClose={true}>
           <Button key={i} variant="outline-primary" className="registers-item" onClick={() => setSelectedRegister('r' + i)}>
             <div className="registers-item-name">R{i}</div>
-            <Badge bg="primary" className="registers-item-value">0x{regs[`r${i}`].toString(16).padStart(8, '0').toUpperCase()}</Badge>
+            <Badge bg="primary" className="registers-item-value">{parseRegister('r' + i, mode)}</Badge>
           </Button>
         </OverlayTrigger>
       );
@@ -110,16 +145,32 @@ const Registers = () => {
   
   return (
     <div className="registers">
-      <h3>Registers</h3>
+      <div className="registers-header">
+        <div className="registers-menu">
+          <h5>
+            Registers values representation
+          </h5>
+
+          <Button variant="outline-secondary" onClick={() => setMode('hexadecimal')} active={mode === 'hexadecimal'}>Hexadecimal</Button>{' '}
+          <Button variant="outline-secondary" onClick={() => setMode('signed')} active={mode === 'signed'}>Signed</Button>{' '}
+          <Button variant="outline-secondary" onClick={() => setMode('unsigned')} active={mode === 'unsigned'}>Unsigned</Button>{' '}
+        </div>
+
+        <div className="registers-flags-container">
+          <h5>
+            CPU Flags
+          </h5>
+          <div className="registers-flags">
+            <h3 style={{ color: z ? "red" : "gray" }}>Z</h3>
+            <h3 style={{ color: n ? "red" : "gray" }}>N</h3>
+            <h3 style={{ color: c ? "red" : "gray" }}>C</h3>
+            <h3 style={{ color: v ? "red" : "gray" }}>V</h3>
+          </div>
+        </div>
+      </div>
       
       {registers_rows()}
 
-      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-evenly", width: "100%" }}>
-        <h3 style={{ color: z ? "red" : "gray" }}>Z</h3>
-        <h3 style={{ color: n ? "red" : "gray" }}>N</h3>
-        <h3 style={{ color: c ? "red" : "gray" }}>C</h3>
-        <h3 style={{ color: v ? "red" : "gray" }}>V</h3>
-      </div>
     </div>
   );
 };

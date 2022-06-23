@@ -48,10 +48,38 @@
 .menu {
   margin: 1rem;
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
 }
 
 .menu-button {
   flex: 1 0 auto;
   margin: 5px;
+}
+
+.bg-warning {
+    color: #af9752 !important;
+    background-color: #fff9e7 !important;
+  
+    .toast-header {
+      background-color: #fff4d0 !important;
+    }
+  }
+
+.bg-danger {
+  color: #a2646a !important;
+  background-color: #fcedee !important;
+  
+  .toast-header {
+    background-color: #f9dadd !important;
+  }
+}
+
+.bg-success {
+  color: #5f8e69 !important;
+  background-color: #e6f5e9 !important;
+
+  .toast-header {
+    background-color: #d6efdd !important;
+  }
 }

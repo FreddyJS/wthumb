@@ -1,4 +1,4 @@
-import { directiveToWord, operationToWord } from "emulator/types";
+import { dataDirectives, directiveToWord, operationToWord, wordToDirective } from "emulator/types";
 
 // Custom codemirror legacy-mode for a simplified arm thumb
 // Defines rules for the basic keywords, operations and registers
@@ -20,13 +20,14 @@ var secLineCommentStartSymbol = "@"
 // architecture initialization function.
 // Reference:
 // http://sourceware.org/binutils/docs/as/Pseudo-Ops.html#Pseudo-Ops
-var directives: { [key: string]: string } = {
-  ".text": "meta",
-  ".data": "meta",
-};
+
+var directives: { [key: string]: string } = {}
 // Fill directives automatically using the directiveToWord object in emulator/types.ts
 for (let i = 0; i < Object.keys(directiveToWord).length; i++) {
   directives[directiveToWord[i]] = "meta";
+  if (dataDirectives.find((el) => el === wordToDirective[directiveToWord[i]])) {
+    directives[directiveToWord[i]] = "number";
+  }
 }
 
 var keywords: { [key: string]: string } = {}

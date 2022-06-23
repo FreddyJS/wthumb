@@ -41,67 +41,123 @@ const codeExample =
   mov r8, r9    ; r8 = 4`
 ;
 
-function App() {
-  const [code, setCode] = useState(codeExample);
-  const error = useAppSelector((state) => state.cpu.error);
-  const dispatch = useAppDispatch();
-  const [showHelp, setShowHelp] = useState(false);
+const warningMessages = [
+  "The program has finished",
+  "No instructions in memory",
+]
 
-  const startEmul = async () => {
-    dispatch(runCode(code))
-    // try {
-    //   const res = await axios.post("http://localhost:8000/api/assembly/validate/", {assembly: code})
-    //   const data = res.data
-    //   console.log(data)
-    //   if (data["compiled"] === true) {
-    //     dispatch(runCode(code))
-    //   } else {
-    //     dispatch(setError(data["message"]))
-    //   }
-    // } catch (e) {
-    //   console.log("The backend is not ready or online. Using typescript compiler")
-    //   dispatch(runCode(code))
-    // }
+const successMessages = [
+  "Code compiled without errors",
+]
+
+
+function App() {
+  const dispatch = useAppDispatch();
+  const error = useAppSelector((state) => state.cpu.error);
+  const cpu = useAppSelector((state) => state.cpu.cpu);
+
+  const [code, setCode] = useState(codeExample);
+  const [showHelp, setShowHelp] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const runProgram = () => {
+    if (cpu.regs['r15'] >= cpu.program.length * 2) {
+      setToastMessage(warningMessages[0]);
+    } else {
+      dispatch(runCode(code))
+    }
+  }
+
+  const stepInto = () => {
+    if (cpu.regs['r15'] >= cpu.program.length * 2) {
+      setToastMessage(warningMessages[0]);
+      return false;
+    } else {
+      dispatch(step())
+      return true;
+    }
+  }
+  const loadProgram = () => {
+    dispatch(reset());
+    dispatch(updateProgram(code))
+
+    if (error === undefined) {
+      setToastMessage(successMessages[0]);
+    }
+  }
+
+  const appToast = () => {
+    const isError = error !== undefined;
+    const isWarning = warningMessages.find((el) => el === toastMessage);
+    const isSuccess = successMessages.find((el) => el === toastMessage);
+
+    if (isError) {
+      return (
+        <Toast bg="danger" onClose={() => dispatch(setError(undefined))}>
+          <Toast.Header>
+            <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
+            <strong className="me-auto">Assembler Error</strong>
+            <small className="text-muted">Line {error.line}</small>
+          </Toast.Header>
+          <Toast.Body>
+            {error.message.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
+              return <div style={{ textAlign: "left" }} key={index}>{line}</div>
+            })}
+          </Toast.Body>
+        </Toast>
+      )
+    } else if (isWarning) {
+      return (
+        <Toast bg="warning" delay={3000} autohide={true} onClose={() => setToastMessage('')}>
+          <Toast.Header>
+            <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
+            <strong className="me-auto">Assembler Error</strong>
+            <small className="text-muted">Line 0</small>
+          </Toast.Header>
+          <Toast.Body>
+            {toastMessage.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
+              return <div style={{ textAlign: "left" }} key={index}>{line}</div>
+            })}          
+          </Toast.Body>
+        </Toast>
+      )
+    } else if (isSuccess) {
+      return (
+        <Toast bg="success" delay={3000} autohide={true} onClose={() => setToastMessage('')}>
+          <Toast.Header>
+            <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
+            <strong className="me-auto">Assembler Error</strong>
+            <small className="text-muted">Line 0</small>
+          </Toast.Header>
+          <Toast.Body>
+            {toastMessage.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
+              return <div style={{ textAlign: "left" }} key={index}>{line}</div>
+            })}            </Toast.Body>
+        </Toast>
+      )
+    }
+
   }
 
   return (
     <div className="App">
       <Navbar bg="primary" variant="dark">
         <Navbar.Brand href="#home">
-          <img
-            alt=""
-            src={logo}
-            width="35"
-            height="35"
-          />
-
+          <img alt="" src={logo} width="35" height="35"/>
           Web ARM Thumb IDE
         </Navbar.Brand>
       </Navbar>
 
-      {error !== undefined ? 
-        <ToastContainer position="top-end" className="p-3">
-          <Toast bg="danger">
-            <Toast.Header onClick={() => dispatch(setError(undefined))}>
-              <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
-              <strong className="me-auto">Asembler Error</strong>
-              <small className="text-muted">Line {error.line}</small>
-            </Toast.Header>
-            <Toast.Body>
-              {error.message.split("\n").filter((line) => line.trim().length > 0).map((line, index) => {
-                return <div style={{ textAlign: "left" }} key={index}>{line}</div>
-              })}
-            </Toast.Body>
-          </Toast>
-        </ToastContainer>
-      : null
-      }
+      <ToastContainer position="top-center" className="p-3">
+        {/* <Toast bg="danger" delay={3000} onClose={() => dispatch(setError(undefined))} autohide={true}> */}
+        {appToast()}
+      </ToastContainer>
 
       <div className="content">
         <div className="menu">
-            <Button className="menu-button" variant="outline-primary" onClick={startEmul}>Run Program</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset()); dispatch(updateProgram(code))}}>Load Program</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(step())}}>Step Into</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={runProgram}>Run Program</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={stepInto}>Step Into</Button>
+            <Button className="menu-button" variant="outline-primary" onClick={loadProgram}>Load Program</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset CPU</Button>
             <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>ARM Help</Button>
             <Help show={showHelp} onClose={() => setShowHelp(false)}/>
