@@ -1,22 +1,30 @@
 .program {
+  // background-color: #f5f5f5;
+  // border: 1px dotted #000;
   height: 100%;
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
-  background-color: #f5f5f5;
-  border: 1px dotted #000;
-  min-width: 380px;
+  min-width: 400px;
   padding: 5px;
 }
 
 .program-container {
-  min-width: fit-content;
-  white-space: nowrap;
   overflow: auto;
+  text-align: start;
 
   thead {
-    background-color: #fff;
+    background-color: #ffff;
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
     position: sticky;
     top: 0;
+  }
+
+  tbody {
+    border-top: 0 !important;
+
+    .program-row-break {
+      cursor: pointer;
+    }
   }
 }

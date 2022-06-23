@@ -16,11 +16,11 @@ import { updateRegister } from "reducers/cpuReducer";
 const Registers = () => {
   const dispatch = useAppDispatch();
 
-  const regs = useAppSelector(state => state.cpu.cpu.regs);
-  const z = useAppSelector(state => state.cpu.cpu.z);
-  const n = useAppSelector(state => state.cpu.cpu.n);
-  const c = useAppSelector(state => state.cpu.cpu.c);
-  const v = useAppSelector(state => state.cpu.cpu.v);
+  const regs = useAppSelector((state) => state.cpu.cpu.regs);
+  const z = useAppSelector((state) => state.cpu.cpu.z);
+  const n = useAppSelector((state) => state.cpu.cpu.n);
+  const c = useAppSelector((state) => state.cpu.cpu.c);
+  const v = useAppSelector((state) => state.cpu.cpu.v);
 
   const [selectedRegister, setSelectedRegister] = useState('r0');
   const [registerValue, setRegisterValue] = useState('');
