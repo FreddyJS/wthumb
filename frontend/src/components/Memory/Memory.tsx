@@ -47,7 +47,7 @@ const Memory = () => {
           <FormGroup>
             <Form.Label htmlFor="inputPassword5">Memory value</Form.Label>
             <Form.Control
-              placeholder={"0x" + memory[selectedMemoryAddress].toString(16).padStart(8, '0').toUpperCase()}
+              placeholder={"0x" + memory[selectedMemoryAddress/4].toString(16).padStart(8, '0').toUpperCase()}
               isInvalid={!isValidValue}
               isValid={isValidValue}
               value={memoryValue}
