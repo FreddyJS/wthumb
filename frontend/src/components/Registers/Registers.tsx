@@ -4,11 +4,11 @@ import "./registers.scss";
 import { useAppDispatch, useAppSelector } from "hooks";
 
 import Form from "react-bootstrap/Form";
+import FormGroup from "react-bootstrap/FormGroup";
 import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 import Popover from "react-bootstrap/Popover";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import { FormGroup } from "react-bootstrap";
 import { updateRegister } from "reducers/cpuReducer";
 
 const Registers = () => {
@@ -64,7 +64,6 @@ const Registers = () => {
               {Number(registerValue) > 0xFFFFFFFF ? " Number too big" : Number(registerValue) < 0x0 ? " No negative numbers" : " Not a Number"}
             </Form.Control.Feedback>
             <Form.Text id="valuehelp" muted>New value of register. A 32 bits number.</Form.Text>
-
           </FormGroup>
 
           { isValidValue ? 
@@ -81,7 +80,7 @@ const Registers = () => {
     let row: JSX.Element[] = [];
     for (let i = first; i < last; i++) {
       row.push(
-        <OverlayTrigger key={"overlay" + i}trigger="click" placement="left" overlay={registerMenu} rootClose={true}>
+        <OverlayTrigger key={"regoverlay" + i} trigger="click" placement="left" overlay={registerMenu} rootClose={true}>
           <Button key={i} variant="outline-primary" className="registers-item" onClick={() => setSelectedRegister('r' + i)}>
             <div className="registers-item-name">R{i}</div>
             <Badge bg="primary" className="registers-item-value">0x{regs[`r${i}`].toString(16).padStart(8, '0').toUpperCase()}</Badge>
