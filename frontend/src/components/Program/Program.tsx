@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "hooks";
 import "./program.scss";
 
-import { Table } from "react-bootstrap";
+import { Table, Badge } from "react-bootstrap";
 
 import { Instruction } from "emulator/types";
 import { selectProgram, setBreakpoint, unsetBreakpoint } from "reducers/cpuReducer";
@@ -42,7 +42,7 @@ const Program = () => {
                 }
                 <td>0x{(index*2).toString(16).padStart(2, '0')}</td>
                 <td>
-                  {ins.label}
+                  <Badge bg="primary" className="program-label">{ins.label}</Badge>
                 </td>
                 <td style={{ textAlign: "left", paddingLeft: "5%"}}>
                   {ins.name + " " + ins.operands.map(op => op.value).join(", ")}

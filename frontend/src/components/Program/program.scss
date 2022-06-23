@@ -23,6 +23,12 @@
   tbody {
     border-top: 0 !important;
 
+    .program-label {
+      background-color: #CEECF5 !important;
+      font-weight: bold;
+      color: black;
+    }
+
     .program-row-break {
       cursor: pointer;
     }
