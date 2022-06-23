@@ -30,6 +30,10 @@
         position: sticky;
         top: 0;
     }
+
+    tbody {
+        border-top: 0 !important;
+    }
     
     tr:hover {
         cursor: pointer;
