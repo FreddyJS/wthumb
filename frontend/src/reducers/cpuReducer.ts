@@ -23,12 +23,20 @@ export const cpuSlice = createSlice({
   initialState: initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    setBreakpoint: (state, action) => {
+      const index = action.payload / 2;
+      state.cpu.program[index].break = true;
+    },
+    unsetBreakpoint: (state, action) => {
+      const index = action.payload / 2;
+      state.cpu.program[index].break = false;
+    },
     setError: (state, action) => {
-      console.log(action)
       state.error = action.payload;
       state.cpu.error = action.payload;
     },
     updateProgram: (state, action) => {
+      state.cpu.reset();
       state.cpu.loadAssembly(action.payload);
       if (state.cpu.error) {
         state.error = state.cpu.error;
@@ -44,12 +52,9 @@ export const cpuSlice = createSlice({
       state.cpu.memory[index] = action.payload.value;
     },
     runCode: (state, action) => {
-      state.cpu.reset();
-      state.cpu.loadAssembly(action.payload);
       if (state.cpu.error) {
-        state.error = state.cpu.error;
+        return;
       } else {
-        state.error = undefined;
         state.cpu.run();
       }
     },
@@ -66,7 +71,7 @@ export const cpuSlice = createSlice({
   },
 });
 
-export const { setError, updateProgram, updateRegister, updateMemory, runCode, step, reset } = cpuSlice.actions;
+export const { setBreakpoint, unsetBreakpoint, setError, updateProgram, updateRegister, updateMemory, runCode, step, reset } = cpuSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of

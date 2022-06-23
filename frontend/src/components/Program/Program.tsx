@@ -1,16 +1,24 @@
-import { useAppSelector } from "hooks";
+import { useAppDispatch, useAppSelector } from "hooks";
 import "./program.scss";
-import stopImage from "./stop.png";
-import stopGif from "./stop.gif";
 
 import { Table } from "react-bootstrap";
 
 import { Instruction } from "emulator/types";
-import { selectProgram } from "reducers/cpuReducer";
+import { selectProgram, setBreakpoint, unsetBreakpoint } from "reducers/cpuReducer";
 
 const Program = () => {
+  const dispatch = useAppDispatch();
   const program = useAppSelector(selectProgram)
   const pc = useAppSelector(state => state.cpu.cpu.regs["r15"])
+
+  const changeBreakpoint = (index: number) => {
+    console.log("Change breakpoint: " + index);
+    if (program[index].break === true) {
+      dispatch(unsetBreakpoint(index*2));
+    } else {
+      dispatch(setBreakpoint(index*2));
+    }
+  }
 
   return (
     <div className="program">
@@ -27,7 +35,11 @@ const Program = () => {
           <tbody>
             {program.map((ins: Instruction, index: number) => (
               <tr key={index} style={index*2 === pc ? { backgroundColor: "#c3e6cb" } : {}}>
-                <td className="program-row-break" onClick={() => console.log('Clicked')}>&#128308;</td>
+                {ins.break === true ? 
+                  <td className="program-row-break" onClick={() => changeBreakpoint(index)}>&#128308;</td>
+                  :
+                  <td className="program-row-break" onClick={() => changeBreakpoint(index)}></td>
+                }
                 <td>0x{(index*2).toString(16).padStart(2, '0')}</td>
                 <td>
                   {ins.label}

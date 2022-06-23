@@ -64,7 +64,7 @@ function App() {
     if (cpu.regs['r15'] >= cpu.program.length * 2) {
       setToastMessage(warningMessages[0]);
     } else {
-      dispatch(runCode(code))
+      dispatch(runCode(code));
     }
   }
 
