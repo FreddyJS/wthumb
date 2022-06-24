@@ -120,6 +120,10 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           this.memory.push(initialMemory[i]);
           this.memSize++;
         } else {
+          if (i >= this.memSize) {
+            this.memSize++;
+          }
+
           this.memory[i] = initialMemory[i];
         }
       }
