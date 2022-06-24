@@ -43,6 +43,8 @@ export const cpuSlice = createSlice({
       } else {
         state.error = undefined;
       }
+
+      action.payload = state.error;
     },
     updateRegister: (state, action) => {
       state.cpu.regs[action.payload.register] = action.payload.value;

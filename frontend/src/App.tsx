@@ -77,11 +77,13 @@ function App() {
       return true;
     }
   }
+
   const loadProgram = () => {
     dispatch(reset());
-    dispatch(updateProgram(code))
+    const action = dispatch(updateProgram(code))
 
-    if (error === undefined) {
+    // If an error ocurred on compilation action.payload will hold the CompilerError object
+    if (action.payload === undefined) {
       setToastMessage(successMessages[0]);
     }
   }
