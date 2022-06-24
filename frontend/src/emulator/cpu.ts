@@ -132,7 +132,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.memory = this.memory.concat(new Array(this.stackSize).fill(0));
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 22, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 25, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
@@ -472,6 +472,47 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
                 if (this.regs[destReg] < 0) {
                   this.regs[destReg] = this.regs[destReg] >>> 0;
                 }
+              }
+            }
+          }
+          break;
+
+        case Operation.STR:
+        case Operation.STRH:
+        case Operation.STRB:
+          {
+            const [op1, op2] = ins.operands;
+            const destReg = op1.value;
+
+            const [value1, value2] = indirectOperandValues(op2);
+            const offset = isInmediateType(value2.type) ? inmediateOperandNumber(value2) : this.regs[value2.value];
+            const address = this.regs[value1.value] + offset;
+
+            if (address / 4 >= this.memory.length) {
+              // TODO: This is out of memory, should return an error
+              this.regs[destReg] = 0x0
+            } else {
+              if (ins.operation === Operation.STR) {
+                this.memory[address / 4] = this.regs[destReg];
+              } else if (ins.operation === Operation.STRH) {
+                const toSave = this.regs[destReg] & 0xFFFF;
+                if (address % 4 === 0) {
+                  this.memory[address / 4] = (this.memory[address / 4] & 0xFFFF0000) | toSave;
+                } else {
+                  this.memory[Math.floor(address / 4)] = (this.memory[address / 4] & 0xFFFF) | (toSave << 16);
+                }
+              } else if (ins.operation === Operation.STRB) {
+                const toSave = this.regs[destReg] & 0x00FF;
+                const mod = address % 4;
+                let mask = 0xFFFFFF00
+                if (mod === 1) {
+                  mask = 0xFFFF00FF
+                } else if (mod === 2) {
+                  mask = 0xFF00FFFF
+                } else if (mod === 3) {
+                  mask = 0x00FFFFFF
+                }
+                this.memory[Math.floor(address / 4)] = (this.memory[Math.floor(address / 4)] & mask) | (toSave << (8 * mod))
               }
             }
           }
