@@ -85,7 +85,7 @@ function compileDirective(line: string) {
       {
         const args = line.split(',').map((arg) => arg.trim());
         if (args.length === 0) {
-          return throwCompilerError('No value provided for the .byte directive');
+          return throwCompilerError('No value provided for the ' +  directiveToWord[directive] + ' directive');
         }
 
         let bytesToSave = 1;
@@ -102,8 +102,8 @@ function compileDirective(line: string) {
           // TODO: numbers bigger than 0xFFFFFFFF may cause problems
           // Tested with 0xFFFFFFFFFFFFFFFF and it doesn't load correctly
           let value = Number(args[i]);
-          if (value === undefined) {
-            return throwCompilerError('Invalid value \'' + args[i] + '\' for the' + directiveToWord[directive] + 'directive');
+          if (isNaN(value)) {
+            return throwCompilerError('Invalid value \'' + args[i] + '\' for the ' + directiveToWord[directive] + ' directive');
           }
 
           while (savedBytes !== bytesToSave) {

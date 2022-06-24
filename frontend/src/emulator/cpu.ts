@@ -94,6 +94,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     reset() {
       this.memory = new Array(this.memSize + this.stackSize).fill(0);
       this.regs = { ...defaultRegs };
+      this.regs['r13'] = this.memSize * 4;
       this.error = undefined;
       this.program = [];
 
@@ -117,10 +118,14 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       for (let i = 0; i < initialMemory.length; i++) {
         if (i >= this.memory.length) {
           this.memory.push(initialMemory[i]);
+          this.memSize++;
         } else {
           this.memory[i] = initialMemory[i];
         }
       }
+
+      this.regs['r13'] = this.memSize * 4;
+      this.memory = this.memory.concat(new Array(this.stackSize).fill(0));
     },
     execute(ins: Instruction) {
       assert(Operation.TOTAL_OPERATIONS === 17, 'Exhaustive handling of operations in execute');
@@ -437,6 +442,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     },
   };
 
+  armCPU.regs['r13'] = armCPU.memSize * 4;
   return armCPU;
 }
 
