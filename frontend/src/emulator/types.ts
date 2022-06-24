@@ -22,6 +22,13 @@ enum Operation {
   LSR,
   ASR,
   ROR,
+
+  // Load operations
+  LDR,
+  LDRH,
+  LDRB,
+  LDRSH,
+  LDRSB,
   TOTAL_OPERATIONS,
 }
 
@@ -48,6 +55,13 @@ const wordToOperation: { [key: string]: Operation } = {
   lsr: Operation.LSR,
   asr: Operation.ASR,
   ror: Operation.ROR,
+
+  // Load operations
+  ldr: Operation.LDR,
+  ldrh: Operation.LDRH,
+  ldrb: Operation.LDRB,
+  ldrsh: Operation.LDRSH,
+  ldrsb: Operation.LDRSB,
 };
 
 const operationToWord: { [key: number]: string } = {
@@ -73,6 +87,13 @@ const operationToWord: { [key: number]: string } = {
   [Operation.LSR]: 'lsr',
   [Operation.ASR]: 'asr',
   [Operation.ROR]: 'ror',
+
+  // Load operations
+  [Operation.LDR]: 'ldr',
+  [Operation.LDRH]: 'ldrh',
+  [Operation.LDRB]: 'ldrb',
+  [Operation.LDRSH]: 'ldrsh',
+  [Operation.LDRSB]: 'ldrsb',
 };
 
 enum OperandType {
@@ -81,6 +102,7 @@ enum OperandType {
   SpRegister,
   HexInmediate,
   DecInmediate,
+  IndirectValue,
 }
 
 type CompilerError = {

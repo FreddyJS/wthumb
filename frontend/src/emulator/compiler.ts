@@ -85,7 +85,7 @@ function compileDirective(line: string) {
       {
         const args = line.split(',').map((arg) => arg.trim());
         if (args.length === 0) {
-          return throwCompilerError('No value provided for the ' +  directiveToWord[directive] + ' directive');
+          return throwCompilerError('No value provided for the ' + directiveToWord[directive] + ' directive');
         }
 
         let bytesToSave = 1;
@@ -197,7 +197,7 @@ function compileDirective(line: string) {
  */
 function compileInstruction(line: string) {
   const words = line.split(' ');
-  const args = words
+  let args = words
     .slice(1)
     .join(' ')
     .split(',')
@@ -221,7 +221,7 @@ function compileInstruction(line: string) {
     break: false,
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 17, 'Exhaustive handling of operations in lineToInstruction');
+  assert(Operation.TOTAL_OPERATIONS === 22, 'Exhaustive handling of operations in lineToInstruction');
   switch (operation) {
     case Operation.MOV: {
       // CASE: MOV r1, [Rs | #0xFF]
@@ -681,6 +681,137 @@ function compileInstruction(line: string) {
       }
     } break;
 
+    case Operation.LDR: {
+      // CASE: ldr r1, [r2, r4 | #Inm]
+      const auxLine = line.split(' ').slice(1).join(' ');
+      const arg1 = auxLine.split(',')[0].trim();
+      const arg2 = auxLine.split(',').slice(1).join(',').trim();
+      const op1Type = argToOperandType(arg1);
+      const op2Type = argToOperandType(arg2);
+      args = [arg1, arg2];
+
+      if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid operand 1 for LDR. Expected low register (r[0-7]), got: ' + arg1);
+      } else if (op2Type === undefined || op2Type !== OperandType.IndirectValue) {
+        return throwCompilerError('Invalid operand 2 for LDR. Expected indirect value ([r0, #4]), got: ' + arg2);
+      }
+
+      // Operand two can only use low registers, sp or pc (pc not supported for now)
+      const value1 = arg2.split(',')[0].replace('[', '').trim();
+      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1Type = argToOperandType(value1);
+      const value2Type = argToOperandType(value2);
+
+      if (value1Type !== OperandType.LowRegister && value1Type !== OperandType.SpRegister) {
+        return throwCompilerError('Invalid register for LDR in indirect value. Use low register or sp.');
+      } else if (value1Type === OperandType.SpRegister && !isInmediateType(value2Type)) {
+        return throwCompilerError('Invalid 2 value for indirect values. Only #Inm allowed with sp');
+      }
+
+      const maxInmediate = value1Type === OperandType.SpRegister ? 1020 : 124;
+      if (value2Type !== OperandType.LowRegister && !isInmediateType(value2Type)) {
+        return throwCompilerError('Invalid 2 value for indirect values. Expected low register or #Inm');
+      } else if (isInmediateType(value2Type) && (!inmediateInRange(value2, maxInmediate) || !isAligned(value2, 4))) {
+        return throwCompilerError('Invalid inmediate value in indirect value. Expected #Inm 0-' + maxInmediate + ' aligned to 4');
+      }
+    } break;
+
+    case Operation.LDRH: {
+      // CASE: ldrh r1, [r2, r4 | #Inm]
+      const auxLine = line.split(' ').slice(1).join(' ');
+      const arg1 = auxLine.split(',')[0].trim();
+      const arg2 = auxLine.split(',').slice(1).join(',').trim();
+      const op1Type = argToOperandType(arg1);
+      const op2Type = argToOperandType(arg2);
+      args = [arg1, arg2];
+
+      if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid operand 1 for LDR. Expected low register (r[0-7]), got: ' + arg1);
+      } else if (op2Type === undefined || op2Type !== OperandType.IndirectValue) {
+        return throwCompilerError('Invalid operand 2 for LDR. Expected indirect value ([r0, #4]), got: ' + arg2);
+      }
+
+      // Operand two can only use low registers or #Inm
+      const value1 = arg2.split(',')[0].replace('[', '').trim();
+      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1Type = argToOperandType(value1);
+      const value2Type = argToOperandType(value2);
+
+      if (value1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid register for LDRH in indirect value. Use low register.');
+      }
+
+      const maxInmediate = 62;
+      if (value2Type !== OperandType.LowRegister && !isInmediateType(value2Type)) {
+        return throwCompilerError('Invalid 2 value for indirect values. Expected low register or #Inm');
+      } else if (isInmediateType(value2Type) && (!inmediateInRange(value2, maxInmediate) || !isAligned(value2, 2))) {
+        return throwCompilerError('Invalid inmediate value in indirect value. Expected #Inm 0-' + maxInmediate + ' aligned to 2');
+      }
+    } break;
+
+    case Operation.LDRB: {
+      // CASE: ldrh r1, [r2, r4 | #Inm]
+      const auxLine = line.split(' ').slice(1).join(' ');
+      const arg1 = auxLine.split(',')[0].trim();
+      const arg2 = auxLine.split(',').slice(1).join(',').trim();
+      const op1Type = argToOperandType(arg1);
+      const op2Type = argToOperandType(arg2);
+      args = [arg1, arg2];
+
+      if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid operand 1 for LDR. Expected low register (r[0-7]), got: ' + arg1);
+      } else if (op2Type === undefined || op2Type !== OperandType.IndirectValue) {
+        return throwCompilerError('Invalid operand 2 for LDR. Expected indirect value ([r0, #4]), got: ' + arg2);
+      }
+
+      // Operand two can only use low registers or #Inm
+      const value1 = arg2.split(',')[0].replace('[', '').trim();
+      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1Type = argToOperandType(value1);
+      const value2Type = argToOperandType(value2);
+
+      if (value1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid register for LDRB in indirect value. Use low register.');
+      }
+
+      const maxInmediate = 31;
+      if (value2Type !== OperandType.LowRegister && !isInmediateType(value2Type)) {
+        return throwCompilerError('Invalid 2 value for indirect values. Expected low register or #Inm');
+      } else if (isInmediateType(value2Type) && !inmediateInRange(value2, maxInmediate)) {
+        return throwCompilerError('Invalid inmediate value in indirect value. Expected #Inm 0-' + maxInmediate);
+      }
+    } break;
+
+    case Operation.LDRSH: 
+    case Operation.LDRSB: 
+    {
+      // CASE: ldrsh r1, [r2, r4]
+      const auxLine = line.split(' ').slice(1).join(' ');
+      const arg1 = auxLine.split(',')[0].trim();
+      const arg2 = auxLine.split(',').slice(1).join(',').trim();
+      const op1Type = argToOperandType(arg1);
+      const op2Type = argToOperandType(arg2);
+      args = [arg1, arg2];
+
+      if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid operand 1 for ' + operationToWord[operation] + '. Expected low register (r[0-7]), got: ' + arg1);
+      } else if (op2Type === undefined || op2Type !== OperandType.IndirectValue) {
+        return throwCompilerError('Invalid operand 2 for ' + operationToWord[operation] + '. Expected indirect value ([r0, #4]), got: ' + arg2);
+      }
+
+      // Operand two can only use low registers or #Inm
+      const value1 = arg2.split(',')[0].replace('[', '').trim();
+      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1Type = argToOperandType(value1);
+      const value2Type = argToOperandType(value2);
+
+      if (value1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid register for ' + operationToWord[operation] + ' in indirect value. Use low register.');
+      } else if (value2Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid register for ' + operationToWord[operation] + ' in indirect value. Use low register.');
+      }
+    } break;
+
     default:
       throw new Error('Unreachable code in lineToInstruction');
   }
@@ -693,7 +824,7 @@ function compileInstruction(line: string) {
 
     const operand: Operand = {
       type: operandType,
-      value: args[i] === "sp" ? "r13" : args[i],
+      value: args[i].replace(/sp/, 'r13'),
     }
     instruction.operands.push(operand);
   }

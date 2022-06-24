@@ -31,6 +31,11 @@ function argToOperandType(operand: string): OperandType | undefined {
     type = OperandType.SpRegister;
   } else if (/^#0x[0-9a-f]+$/.test(operand) || /^#\d+$/.test(operand)) {
     type = operand.startsWith('#0x') ? OperandType.HexInmediate : OperandType.DecInmediate;
+  } else if (/^\[\s*(r\d+|sp)\s*,\s*(#|#0x)\d+\s*\]$/.test(operand)) {
+    // [rN | sp, #0x04 | #124]
+    type = OperandType.IndirectValue;
+  } else if (/^\[\s*r\d+\s*,\s*r\d+\s*\]$/.test(operand)) {
+    type = OperandType.IndirectValue;
   }
 
   return type;
@@ -50,8 +55,8 @@ function isRegisterType(type: OperandType): boolean {
  * @param type OperandType to check
  * @returns true if it's an inmediate
  */
-function isInmediateType(type: OperandType): boolean {
-  return type === OperandType.DecInmediate || type === OperandType.HexInmediate;
+function isInmediateType(type: OperandType | undefined): boolean {
+  return type === undefined ? false : type === OperandType.DecInmediate || type === OperandType.HexInmediate;
 }
 
 /**
@@ -86,6 +91,34 @@ function inmediateOperandNumber(operand: Operand): number {
 }
 
 /**
+ * Returns a tuple with first and second values of a indirect operand [r1, r2 | #1] as Operand objects
+ * @param operand Operand to get values. It's type must be IndirectValue
+ * @returns Tuple with [value1, value2]
+ */
+function indirectOperandValues(operand: Operand): [Operand, Operand] {
+  const value1 = operand.value.split(',')[0].replace('[', '').trim();
+  const value2 = operand.value.split(',')[1].replace(']', '').trim();
+
+  const value1Type = argToOperandType(value1);
+  const value2Type = argToOperandType(value2);
+
+  if (value1Type === undefined || value2Type === undefined) {
+    throw new Error('Compiler error, this is not a valid Operand with type IndirectValue');
+  }
+
+  const op1: Operand = {
+    type: value1Type,
+    value: value1,
+  }
+  const op2: Operand = {
+    type: value2Type,
+    value: value2,
+  }
+
+  return [op1, op2]
+}
+
+/**
  * Checks if a string number is aligned to a size
  * @param addr string in inmediate, hex or dec format 
  * @param size size to be aligned
@@ -95,4 +128,4 @@ function isAligned(addr: string, size: number): boolean {
   return parseInt(addr.replace('#', '')) % size === 0;
 }
 
-export { assert, argToOperandType, isRegisterType, isInmediateType, inmediateInRange, inmediateOperandNumber, isAligned }
+export { assert, argToOperandType, isRegisterType, isInmediateType, inmediateInRange, inmediateOperandNumber, indirectOperandValues, isAligned }
