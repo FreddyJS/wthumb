@@ -18,51 +18,57 @@ const Help = ({ show, onClose }: HelpProps) => {
             </Modal.Header>
 
             <Modal.Body>
-                <h4>Supported operations</h4>
-                <Table className="help-table" striped bordered hover>
-                    <thead>
-                        <tr>
-                            <th>Instruction</th>
-                            <th>Example</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.keys(wordToOperation).map((word) => {
-                            return (
-                                <tr key={word}>
-                                    <td><b>{word}</b></td>
-                                    <td>This is an example</td>
-                                    <td>This is the description</td>
+                <div style={{ display: "flex", flexDirection: "row", height: "50%" }}>
+                    <div style={{ width: "50%" }}>
+                        <h4>Supported operations</h4>
+                        <Table className="help-table" striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Instruction</th>
+                                    <th>Example</th>
+                                    <th>Description</th>
                                 </tr>
-                            );
-                        }
-                        )}
-                    </tbody>
-                </Table>
+                            </thead>
+                            <tbody>
+                                {Object.keys(wordToOperation).map((word) => {
+                                    return (
+                                        <tr key={word}>
+                                            <td><b>{word}</b></td>
+                                            <td>This is an example</td>
+                                            <td>This is the description</td>
+                                        </tr>
+                                    );
+                                }
+                                )}
+                            </tbody>
+                        </Table>
+                    </div>
 
-                <h4>Supported directives</h4>
-                <Table className="help-table" striped bordered hover>
-                    <thead>
-                        <tr>
-                            <th>Directive</th>
-                            <th>Example</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.keys(wordToDirective).map((word) => {
-                            return (
-                                <tr key={word}>
-                                    <td><b>{word}</b></td>
-                                    <td>This is an example</td>
-                                    <td>This is the description</td>
+                    <div style={{ width: "50%" }}>
+                        <h4>Supported directives</h4>
+                        <Table className="help-table" striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Directive</th>
+                                    <th>Example</th>
+                                    <th>Description</th>
                                 </tr>
-                            );
-                        }
-                        )}
-                    </tbody>
-                </Table>
+                            </thead>
+                            <tbody>
+                                {Object.keys(wordToDirective).map((word) => {
+                                    return (
+                                        <tr key={word}>
+                                            <td><b>{word}</b></td>
+                                            <td>This is an example</td>
+                                            <td>This is the description</td>
+                                        </tr>
+                                    );
+                                }
+                                )}
+                            </tbody>
+                        </Table>
+                    </div>
+                </div>
 
             </Modal.Body>
 

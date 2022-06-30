@@ -196,6 +196,7 @@ function compileDirective(line: string) {
  * @returns 
  */
 function compileInstruction(line: string) {
+  assert(Operation.TOTAL_OPERATIONS === 28, 'Exhaustive handling of operations in lineToInstruction');
   const words = line.split(' ');
   let args = words
     .slice(1)
@@ -203,9 +204,13 @@ function compileInstruction(line: string) {
     .split(',')
     .map((operand) => operand.trim());
 
-  const operation = wordToOperation[words[0]];
+  let operation = wordToOperation[words[0]];
   if (operation === undefined) {
-    return throwCompilerError('Unknown operation: ' + words[0]);
+    if (words[0].startsWith('b')) {
+      operation = Operation.B;
+    } else {
+      return throwCompilerError('Unknown operation: ' + words[0]);
+    }
   }
 
   for (let i = 0; i < args.length; i++) {
@@ -221,7 +226,6 @@ function compileInstruction(line: string) {
     break: false,
   }
 
-  assert(Operation.TOTAL_OPERATIONS === 25, 'Exhaustive handling of operations in lineToInstruction');
   switch (operation) {
     case Operation.MOV: {
       // CASE: MOV r1, [Rs | #0xFF]
@@ -243,8 +247,6 @@ function compileInstruction(line: string) {
       if (isInmediateType(op2Type)) {
         if (!inmediateInRange(args[1], 255)) {
           return throwCompilerError('Invalid inmediate for MOV. Number out of range. Expected 0-255 but got ' + args[1]);
-        } else if (op1Type === OperandType.HighRegister) {
-          return throwCompilerError('Invalid register for MOV. Only low registers are allowed with inmediate values');
         }
       }
     } break;
@@ -270,7 +272,7 @@ function compileInstruction(line: string) {
           case OperandType.LowRegister:
             // CASE: ADD r1, [Rs | #Inm | sp]
             if (!isInmediateType(op2Type) && !isRegisterType(op2Type)) {
-              return throwCompilerError('Invalid operand 2 for ADD. Expected #Inm, r[0-15] or sp, got ' + args[1]);
+              return throwCompilerError('Invalid operand 2 for ADD. Expected #Inm8 or r[0-15], got ' + args[1]);
             } else if (isInmediateType(op2Type) && !inmediateInRange(args[1], 255)) {
               return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + args[1]);
             }
@@ -280,7 +282,7 @@ function compileInstruction(line: string) {
             if (isInmediateType(op2Type)) {
               return throwCompilerError('Invalid operand 2 for ADD. Only low registers are allowed with inmediate values');
             } else if (!isRegisterType(op2Type)) {
-              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15], got ' + args[1]);
             }
             break;
 
@@ -329,24 +331,26 @@ function compileInstruction(line: string) {
                   return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-' + maxValue + ' but got ' + args[2]);
                 }
               } else if (!isRegisterType(op3Type)) {
-                return throwCompilerError('Invalid operand 3 for ADD. Expected r[0-15], sp or #8bit_Inm, got ' + args[2]);
+                return throwCompilerError('Invalid operand 3 for ADD. Expected r[0-15] or #8bit_Inm, got ' + args[2]);
               }
             } else if (op2Type === OperandType.SpRegister) {
               if (isInmediateType(op3Type)) {
                 if (!inmediateInRange(args[2], 1020)) {
                   return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-1020 but got ' + args[2]);
+                } else if (!isAligned(args[2], 4)) {
+                  return throwCompilerError('Invalid inmediate for ADD. Number not multiple of 4. Expected 0-1020 but got ' + args[2]);
                 }
               } else {
                 return throwCompilerError('Invalid operand 3 for ADD. Expected #Inm, got ' + args[2]);
               }
             } else if (op2Type !== OperandType.HighRegister) {
-              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15], got ' + args[1]);
             }
             break;
 
           case OperandType.HighRegister:
             if (!isRegisterType(op2Type)) {
-              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15] or sp, got ' + args[1]);
+              return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15], got ' + args[1]);
             } else if (!isRegisterType(op3Type)) {
               return throwCompilerError('Invalid operand 3 for ADD. Expected r[0-15], got ' + args[2]);
             }
@@ -391,17 +395,15 @@ function compileInstruction(line: string) {
           // CASE: sub sp, #0xFF
           if (!isInmediateType(op2Type)) {
             return throwCompilerError('Invalid operand 2 for SUB. Expected #Inm, got ' + args[1]);
-          } else if (!inmediateInRange(args[1], 508)) {
-            return throwCompilerError('Invalid inmediate for SUB. Number out of range. Expected 0-508 but got ' + args[1]);
-          } else if (!isAligned(args[1], 4)) {
-            return throwCompilerError('Invalid inmediate for SUB. Number not aligned to 4.');
+          } else if (!inmediateInRange(args[1], 508) || !isAligned(args[1], 4)) {
+            return throwCompilerError('Invalid inmediate for SUB. Expected #Inm 0-508 aligned to 4, got ' + args[1]);
           }
         } else {
           // op1Type is a low register
           // CASE: sub r1, [r2 | #0xFF]
           if (isInmediateType(op2Type)) {
             if (!inmediateInRange(args[1], 255)) {
-              return throwCompilerError('Invalid inmediate for SUB. Number out of range. Expected 0-255 but got ' + args[1]);
+              return throwCompilerError('Invalid inmediate for SUB. Expected #Inm 0-508 aligned to 4, got ' + args[1]);
             }
           }
         }
@@ -414,13 +416,18 @@ function compileInstruction(line: string) {
           } else if (op3Type === undefined || (op3Type !== OperandType.LowRegister && !isInmediateType(op3Type))) {
             return throwCompilerError('Invalid operand 3 for SUB. Expected r[0-7] or #Inm, got ' + args[2]);
           }
+
+          const maxValue = args[0] === args[1] ? 255 : 7;
+          if (isInmediateType(op3Type) && !inmediateInRange(args[2], maxValue)) {
+            return throwCompilerError('Invalid inmediate for SUB. Number out of range. Expected 0-' + maxValue + ' but got ' + args[2]);
+          }
         } else {
           // op1Type is a sp register
           // CASE: sub sp, sp, #0xFF
           if (op2Type !== OperandType.SpRegister) {
             return throwCompilerError('Invalid operand 2 for SUB. Expected sp, got ' + args[1]);
           } else if (op3Type === undefined || !isInmediateType(op3Type)) {
-            return throwCompilerError('Invalid operand 3 for SUB. Expected #Inm, got ' + args[2]);
+            return throwCompilerError('Invalid operand 3 for SUB. Expected #Inm (0-508), got ' + args[2]);
           }
 
           if (!inmediateInRange(args[2], 508)) {
@@ -441,10 +448,10 @@ function compileInstruction(line: string) {
       const op1Type = argToOperandType(args[0]);
       const op2Type = argToOperandType(args[1]);
 
-      if (op1Type === undefined || !isRegisterType(op1Type)) {
-        return throwCompilerError('Invalid operand 1 for NEG. Expected r[0-15], got ' + args[0]);
-      } else if (op2Type === undefined || !isRegisterType(op2Type)) {
-        return throwCompilerError('Invalid operand 2 for NEG. Expected r[0-15], got ' + args[1]);
+      if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid operand 1 for NEG. Only low registers alowed, got ' + args[0]);
+      } else if (op2Type === undefined || op2Type !== OperandType.LowRegister) {
+        return throwCompilerError('Invalid operand 2 for NEG. Only low registers alowed, got ' + args[1]);
       }
     } break;
 
@@ -468,7 +475,7 @@ function compileInstruction(line: string) {
         if (op3Type === undefined || op3Type !== OperandType.LowRegister) {
           return throwCompilerError('Invalid operand 3 for MUL. Expected r[0-7], got ' + args[2]);
         } else if (args[0] !== args[1] && args[0] !== args[2]) {
-          return throwCompilerError('Destination register must be the same as one of the source registers for MUL.');
+          return throwCompilerError('Destiny register must overlap one source register');
         }
       }
     } break;
@@ -912,14 +919,62 @@ function compileInstruction(line: string) {
       }
     } break;
 
+    case Operation.PUSH: {
+      // CASE: push {r1...}
+      const regList = line.split(' ').slice(1).join(' ');
+      const op1Type = argToOperandType(regList);
+
+      if (op1Type !== OperandType.RegisterList) {
+        return throwCompilerError('Invalid register list for PUSH. Expected push {r0, r1...}')
+      }
+      args = [regList]
+    } break;
+
+    case Operation.POP: {
+      // CASE: pop {r1...}
+      const regList = line.split(' ').slice(1).join(' ');
+      const op1Type = argToOperandType(regList);
+
+      if (op1Type !== OperandType.RegisterList) {
+        return throwCompilerError('Invalid register list for POP. Expected pop {r0, r1...}')
+      }
+      args = [regList]
+    } break;
+
+    case Operation.B: {
+      const conditions = ['eq', 'hi', 'gt', 'ne', 'cs', 'ge', 'mi', 'cc', 'lt', 'pl', 'ls', 'le', 'vs', 'vc']
+      let valid = false;
+
+      if (words.length !== 2) {
+        return throwCompilerError('Missing label to jump to');
+      }
+
+      for (let i = 0; i < conditions.length; i ++) {
+        if (words[0].split('b')[1] === '' || words[0].split('b')[1] === conditions[i]) {
+          valid = true;
+        }
+      }
+
+      if (!valid) {
+        return throwCompilerError('Not valid condition to jump');
+      }
+
+      args = [words[1]]
+    } break;
+
     default:
       throw new Error('Unreachable code in lineToInstruction');
   }
 
   for (let i = 0; i < args.length; i++) {
-    const operandType = argToOperandType(args[i]);
+    let operandType = argToOperandType(args[i]);
     if (operandType === undefined) {
-      return throwCompilerError("Unexpected error in the compiler");
+      if (operation === Operation.B) {
+        instruction.name = words[0];
+        operandType = OperandType.Label;
+      } else {
+        return throwCompilerError("Unexpected error in the compiler");
+      }
     }
 
     const operand: Operand = {
@@ -988,6 +1043,10 @@ function compileAssembly(source: string): [Program, number[]] {
       break;
     }
 
+    if (operation === undefined && firstWord.startsWith('b')) {
+      operation = Operation.B;
+    }
+
     if (operation !== undefined) {
       compileInstruction(lines[i].toLowerCase());
       if (label !== undefined) {
@@ -1027,7 +1086,16 @@ function compileAssembly(source: string): [Program, number[]] {
 
       break;
     }
+  }
 
+  for (let i = 0; i < program.ins.length; i++) {
+    const instruction = program.ins[i];
+    if (instruction.label !== undefined && labels[instruction.label] === undefined) {
+      program.error = {
+        line: 0,
+        message: 'Unknown label to jump: ' + instruction.label,
+      }
+    }
   }
 
   const retMemory = [...memory];

@@ -25,7 +25,7 @@ enum Flags {
   V
 }
 
-// const SPREGISTER = 'r13';
+const SPREGISTER = 'r13';
 // const LRREGISTER = 'r14';
 const PCREGISTER = 'r15';
 
@@ -78,8 +78,13 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           return;
         }
 
+        console.log('Executing: ', ins)
         this.execute(ins);
-        this.regs[PCREGISTER] += 2;
+        if (ins.operation !== Operation.B) {
+          this.regs[PCREGISTER] += 2;
+        } else {
+          i = (this.regs[PCREGISTER] / 2) - 1;
+        }
       }
     },
     step() {
@@ -132,7 +137,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.memory = this.memory.concat(new Array(this.stackSize).fill(0));
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 25, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 28, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
@@ -514,6 +519,91 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
                 }
                 this.memory[Math.floor(address / 4)] = (this.memory[Math.floor(address / 4)] & mask) | (toSave << (8 * mod))
               }
+            }
+          }
+          break;
+
+        case Operation.PUSH:
+          {
+            const [op1] = ins.operands;
+            const regList = op1.value.replace('{', '').replace('}', '').split(',');
+
+            for (let i = 0; i < regList.length; i++) {
+              let memIndex = this.regs[SPREGISTER] / 4;
+              if (memIndex === this.memory.length) {
+                this.memory.push(this.regs[regList[i].trim()]);
+              } else {
+                this.memory[memIndex] = this.regs[regList[i].trim()];
+              }
+              this.regs[SPREGISTER] += 4;
+              this.memSize++;
+            }
+          }
+          break;
+
+        case Operation.POP:
+          {
+            const [op1] = ins.operands;
+            const regList = op1.value.replace('{', '').replace('}', '').split(',');
+
+            for (let i = 0; i < regList.length; i++) {
+              let memIndex = this.regs[SPREGISTER] / 4 - 1;
+              if (memIndex < 0) {
+                this.regs[regList[i].trim()] = 0x00;
+              } else {
+                this.regs[regList[i].trim()] = this.memory[memIndex];
+              }
+              this.regs[SPREGISTER] -= 4;
+            }
+          }
+          break;
+
+        case Operation.B:
+          {
+            const [op1] = ins.operands;
+            const condition = ins.name.replace('b', '');
+            const label = op1.value;
+            let pc = 0x00;
+
+            for (let i = 0; i < this.program.length; i++) {
+              if (this.program[i].label === label) {
+                pc = i * 2;
+                break;
+              }
+            }
+
+            if (condition === '') {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'eq' && (this.z)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'hi' && (this.c && !this.z)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'gt' && (!this.z && ((this.n && this.v) || (!this.n && !this.v)))) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'ne' && (!this.z)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'cs' && (this.c)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'ge' && ((this.n && this.v) || (!this.n && !this.v))) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'mi' && (this.n)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'cc' && (!this.c)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'lt' && ((this.n && !this.v) || (!this.n && this.v))) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'pl' && (!this.n)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'ls' && (this.c || this.z)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'le' && ((this.n && !this.v) || (!this.n && this.v) || this.z)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'vs' && (this.v)) {
+              this.regs[PCREGISTER] = pc;
+            } else if (condition === 'vc' && (!this.v)) {
+              this.regs[PCREGISTER] = pc;
+            } else {
+              this.regs[PCREGISTER] += 2;
             }
           }
           break;

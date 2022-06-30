@@ -36,6 +36,16 @@ function argToOperandType(operand: string): OperandType | undefined {
     type = OperandType.IndirectValue;
   } else if (/^\[\s*r\d+\s*,\s*r\d+\s*\]$/.test(operand)) {
     type = OperandType.IndirectValue;
+  } else if (operand.startsWith('{') && operand.endsWith('}')) {
+    operand = operand.replace('{', '').replace('}', '');
+    const regs = operand.split(',');
+    for (let i = 0; i < regs.length; i++) {
+      if (!/^r\d+$/.test(regs[i].trim())) {
+        return type;
+      }
+    }
+
+    type =OperandType.RegisterList;
   }
 
   return type;
