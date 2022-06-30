@@ -78,7 +78,6 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
           return;
         }
 
-        console.log('Executing: ', ins)
         this.execute(ins);
         if (ins.operation !== Operation.B) {
           this.regs[PCREGISTER] += 2;
@@ -93,8 +92,12 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
         return;
       }
 
-      this.execute(this.program[this.regs[PCREGISTER] / 2]);
-      this.regs[PCREGISTER] += 2;
+      const ins = this.program[this.regs[PCREGISTER] / 2];
+      this.execute(ins);
+
+      if (ins.operation !== Operation.B) {
+        this.regs[PCREGISTER] += 2;
+      }
     },
     reset() {
       this.memory = new Array(this.memSize + this.stackSize).fill(0);
