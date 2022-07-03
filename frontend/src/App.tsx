@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 
 import './App.scss';
-import logo from './logo.svg';
+import logo from './cpu.png';
 
 // Bootstrap Components
 import Navbar from 'react-bootstrap/Navbar';
@@ -141,10 +141,10 @@ function App() {
 
   return (
     <div className="App">
-      <Navbar bg="primary" variant="dark">
+      <Navbar bg="dark" variant="dark">
         <Navbar.Brand href="#home">
           <img alt="" src={logo} width="35" height="35"/>
-          Web ARM Thumb IDE
+          ARM Thumb Emulator
         </Navbar.Brand>
       </Navbar>
 
@@ -155,11 +155,11 @@ function App() {
 
       <div className="content">
         <div className="menu">
-            <Button className="menu-button" variant="outline-primary" onClick={runProgram}>Run Program</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={stepInto}>Step Into</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={loadProgram}>Load Program</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {dispatch(reset())}}>Reset CPU</Button>
-            <Button className="menu-button" variant="outline-primary" onClick={() => {setShowHelp(true)}}>ARM Help</Button>
+            <Button className="menu-button" variant="outline-dark" onClick={runProgram}>Run Program</Button>
+            <Button className="menu-button" variant="outline-dark" onClick={stepInto}>Step Into</Button>
+            <Button className="menu-button" variant="outline-dark" onClick={loadProgram}>Load Program</Button>
+            <Button className="menu-button" variant="outline-dark" onClick={() => {dispatch(reset())}}>Reset CPU</Button>
+            <Button className="menu-button" variant="outline-dark" onClick={() => {setShowHelp(true)}}>ARM Help</Button>
             <Help show={showHelp} onClose={() => setShowHelp(false)}/>
         </div>
 
