@@ -1,0 +1,188 @@
+\input{./head/uvigo_msthesis.tex}
+
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+
+%\hypersetup{pageanchor=false}
+
+\begin{document}
+\begin{titlepage}
+
+\Large
+\sffamily
+
+\begin{center}
+  \begin{tabular}{c}
+    \includegraphics[width=0.55\textwidth]{./images/unilogo}
+  \end{tabular}
+\end{center}
+
+\vfill
+\begin{center}
+  \huge 
+    {\huge Desarrollo de una ensamblador para ARM/THUMB}
+
+\vspace{24pt}
+\textcolor{gray}{\small{}}
+\end{center}
+
+\vspace*{2cm}
+\centerline{{\huge Johan Sebastián Villamarín Caicedo}}
+
+\vfill
+
+\begin{center}
+{\large
+  Trabajo de Fin de Grado \\
+  Escuela de Ingeniería de Telecomunicación \\
+  Grado en Ingeniería de Tecnologías de Telecomunicación
+}
+\end{center}
+
+\vfill
+\begin{center}{
+{    Tutor \\
+    Martín Llamas Nistal
+}
+}
+\end{center}
+\vfill
+\centerline{\fontsize{11}{13.8} \selectfont Curso 2021/2022}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\listoffigures
+\setcounter{page}{1}
+
+
+\newpage
+\section{Introducción}
+{
+    Hoy en día la programación es cada vez una competencia más demandada, con la automatización de tareas siempre surge la necesidad de un software ya sea específico o no. \\
+
+    Debido a esto cada vez obtienen mas interés los estudios relacionados con cualquier tipo de desarrollo software (WEB, Android, etc). Entre los distintos lenguajes de programación están los conocidos como \textbf{de bajo nivel o ensamblador}. En estos el programador tiene pleno control sobre los registros de la cpu, habiendo uno específico para cada arquitectura y soportado solo por esta. \\
+    
+    Por ello se usa comunmente simuladores para el desarrollo sin necesidad de tener el hardware o incluso en la docencia de este tipo de lenguajes. Permitiendo estos escribir y probar código para una arquitectura que no es la del equipo. Sin embargo, estos simuladores pueden depender de librerías de terceros o programas por lo que su instalación y uso puede no ser siempre tan rápida. Además no todos son intuitivos y/o configurables. \\
+    
+    Como solución a todo esto, y para el caso concreto de ARM Thumb, se decide desarrollar un \textbf{Ensamblador y Simulador Web para ARM/THUMB}. Al tratarse de una plataforma web simplificamos enormemente la instalación dado que bastaría con disponer de cualquier navegador y conexión a internet. Además esto hace que se pueda usar desde cualquier sistema operativo. \\
+
+    Las tecnologías empleadas para esta plataforma son:
+    \begin{enumerate}
+        \item \textbf{React}: JavaScript Framework
+        \item \textbf{NodeJS}: JavaScript Engine
+        \item \textbf{TypeScript}: React - TypeScript
+        \item \textbf{React-Redux}
+        \item \textbf{Docker}
+    \end{enumerate}
+}
+
+\section{Objetivos}
+{
+    El objetivo principal de este trabajo es crear una plataforma web en la que los usuarios puedan escribir código en lenguaje ARM/THUMB, compilar y probar el programa de forma interactiva. Pudiendo ver en todo momento el estado de la CPU, sus registros y flags de estado, así como la memoria y su contenido. \\
+    
+    Módulos de la aplicación web:
+    \begin{enumerate}
+        \item \textbf{Editor de código}: Editor de texto con soporte para ARM/Thumb con syntax highlighting.
+        \item \textbf{Visualizador de registros}: Panel con los registros de la CPU y su valor. Así como el estado de los flags.
+        \item \textbf{Visualizador de programa}: Lista de instrucciones ensamblador que el usuario ha cargado a la CPU.
+        \item \textbf{Visualizador de memoria}: Panel con la memoria de la CPU.
+        \item \textbf{ARM Help}: Mínima ayuda sobre las instrucciones ARM disponibles en el simulador.
+    \end{enumerate}
+    
+    Como objetivo adicional se busca que la aplicación se lo mas intuitiva posible y ofrezca control absoluto sobre la CPU y la memoria que se está simulando. Con facilidades para modificar los valores de los registros o de la memoria.
+}
+
+\section{Resultados}
+Plataforma web integrando un ensamblador y simulador para ARM Thumb.
+
+    \subsection{ARM Thumb Emulator}
+    {
+        Módulo en TypeScript con todas las funciones necesarias para la simulación de código escrito en ARM/THUMB.
+        Este módulo se desarrolló de forma separada para su posterior integración en el sistema final. Gracias a esta división también se realizaron pruebas unitarias de cada instrucción implementada para asegurar que el comportamiento del simulador es el esperado si se ejecutase en una CPU de ARM real.
+    
+        \begin{figure}[h]
+         \centering
+            \includegraphics[width=0.85\textwidth]{images/tests}
+            \caption{Running Test Suite}
+        \end{figure}
+        
+        \begin{figure}[h]
+         \centering
+            \includegraphics[width=0.85\textwidth]{images/tests2}
+            \caption{Finished Test Suite}
+        \end{figure}
+        
+        Para cada test hay un código de ARM/Thumb cuyo resultado es conocido y siempre el mismo. De este modo podemos asegurar que todo sigue funcionando como debe tan solo con ejecutar las pruebas unitarias.
+        
+        El estado de la CPU tras la ejecución del código es volcado a un archivo temporal (add.json.tmp) de no existir. De este modo si el estado es correcto basta con eliminar la extensión .tmp para que en los siguientes tests este sea el estado esperado de la CPU.
+        
+        \begin{figure}[h]
+         \centering
+            \includegraphics[width=0.85\textwidth]{images/asm}
+            \caption{ARM Test Code}
+        \end{figure}
+    
+        \begin{figure}[h]
+         \centering
+            \includegraphics[width=0.85\textwidth]{images/state}
+            \caption{CPU Expected State}
+        \end{figure}
+        
+        Cada test simboliza una instrucción en ARM Thumb, salvo en algunos casos donde se prueban variantes de una sola en un mismo test (ldr, ldrb, ldrh). Cada test tendrá su correspondiente archivo con el estado esperado de la cpu con el que se comprobará que la ejecución sea correcta.
+
+        \newpage
+        La CPU emulada es básicamente un objeto de javascript con los registros, flags, memoria y todas las funciones necesarias para compilar y ejecutar el código. \\
+
+        \begin{figure}[h]
+         \centering
+            \includegraphics[width=0.85\textwidth]{images/cpu}
+            \caption{ARM CPU Type}
+        \end{figure}
+
+        Para inicializar la cpu basta con llamar a la función defaultCPU() que exporta el módulo. Esta función devuelve un objeto cpu con los valores por defecto, se puede modificar el tamaño de la memoria y del stack por parámetros.
+
+    }
+    
+    \newpage
+    \subsection{Web Interface}
+    {
+        Como interfaz de usuario se desarrolla una plataforma web que integra el emulador. Desarrollada en TypeScript con el framework React. Gracias a la librería React-Redux se comparte un estado global a todos los componentes de la interfaz. Este estado consta de:
+        \begin{enumerate}
+            \item \textbf{cpu}: El objeto CPU del emulador.
+            \item \textbf{assembly}: El código ensamblador que el usuario ha introducido.
+            \item \textbf{error}: Mensaje de error para mostrar en la interfaz, en caso de haber error.
+        \end{enumerate}
+        
+        Este estado es utilizado por los distintos componentes de la interfaz para mantener siempre la información que se muestra actualizada.
+        
+        \begin{figure}[h]
+         \centering
+            \includegraphics[width=0.85\textwidth]{images/ui}
+            \caption{User Interface}
+        \end{figure}
+        
+        \subsubsection{Code Editor}
+        {
+            Editor de texto con highlighting para ARM Thumb. Hace uso de React CodeMirror que tiene soporte para distintos lenguajes. En este caso se extiende la librería para soportar ARM Thumb. Además incorpora múltiples atajos de teclado para mover, cortar o seleccionar texto.
+            
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/editor}
+                \caption{ARM Code Editor}
+            \end{figure}
+
+            Este componente muestra en todo momento el valor de \textbf{assembly} del estado de la aplicación y es el encargado de actualizarlo con la entrada del usuario.
+        }
+        
+        \subsubsection{Registros}
+        {
+        }
+    }
+
+\section{Conclusiones}
+\section{Bibliografía}
+
+
+\end{document}
