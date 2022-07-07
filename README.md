@@ -1,5 +1,5 @@
 # wthumb
-Web Emulator for ARM Thumb Assembly. Code editor for arm thumb with syntax highlighting and emulation of code.
+[Web Emulator for ARM Thumb Assembly](https://freddyjs.github.io/wthumb/). Code editor for arm thumb with syntax highlighting and emulation of code.
 
 ## ARM Thumb Instructions References
 * [ARM Thumb Syscalls](https://syscalls.w3challs.com/?arch=arm_thumb)  
