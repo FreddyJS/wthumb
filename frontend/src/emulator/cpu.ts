@@ -498,7 +498,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             if (address / 4 >= this.memory.length) {
               // TODO: This is out of memory, should return an error
-              this.regs[destReg] = 0x0
+              // this.regs[destReg] = 0x0
             } else {
               if (ins.operation === Operation.STR) {
                 this.memory[address / 4] = this.regs[destReg];
@@ -533,13 +533,15 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             for (let i = 0; i < regList.length; i++) {
               let memIndex = this.regs[SPREGISTER] / 4;
-              if (memIndex === this.memory.length) {
+              console.log(memIndex)
+              if (memIndex >= this.memory.length) {
                 this.memory.push(this.regs[regList[i].trim()]);
+                this.stackSize++;
               } else {
                 this.memory[memIndex] = this.regs[regList[i].trim()];
               }
               this.regs[SPREGISTER] += 4;
-              this.memSize++;
+              // this.memSize++;
             }
           }
           break;
