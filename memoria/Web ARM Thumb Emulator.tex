@@ -142,7 +142,6 @@ Plataforma web integrando un ensamblador y simulador para ARM Thumb.
         \end{figure}
 
         Para inicializar la cpu basta con llamar a la función defaultCPU() que exporta el módulo. Esta función devuelve un objeto cpu con los valores por defecto, se puede modificar el tamaño de la memoria y del stack por parámetros.
-
     }
     
     \newpage
@@ -174,14 +173,141 @@ Plataforma web integrando un ensamblador y simulador para ARM Thumb.
             \end{figure}
 
             Este componente muestra en todo momento el valor de \textbf{assembly} del estado de la aplicación y es el encargado de actualizarlo con la entrada del usuario.
+            Una vez escrito el programa el usuario puede cargarlo en la CPU mediante el botón de \textbf{Load Program} en la parte superior de la interfaz. \\
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/compiled}
+                \caption{Compiled Code}
+            \end{figure}
+
+            \newpage
+            De haber algún error en el código se notificaría al usuario a través de un PopUp indicando la causa y la línea del error.
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/compilererror}
+                \caption{Error Compiling Code}
+            \end{figure}
         }
         
-        \subsubsection{Registros}
+        \subsubsection{Programa}
         {
+            Una vez cargado el programa este estará en el panel izquierdo, donde se podrá ver la siguiente instrucción a ejecutar,
+            los breakpoints del programa así como todas las demás instrucciones cargadas en la CPU. \\
+            
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.8\textwidth, height=0.35\textheight]{images/programa}
+                \caption{Loaded Program}
+            \end{figure}
+            
+            Además se pueden poner/quitar breakpoints con un simple click.
+            Del mismo modo para ejecutar el programa tras su carga tenemos dos botones:
+            \begin{enumerate}
+                \item \textbf{Run Code}: Ejecuta todo el código cargado en la CPU.
+                \item \textbf{Step Into}: Ejecuta instrucción a instrucción el programa cargado.
+            \end{enumerate}
         }
 
+        \subsubsection{Registros y flags}
+        {
+            En ARM Thumb tenemos acceso a 16 registros, la mitad conocidos como \textbf{Low Registers} y la mitad superior \textbf{High Registers}.
+            Estos registros están siempre representados en pantalla junto con los flags de la CPU. 
+
+            Los registros inferiores son los del 0 al 7, mientras que los superiores son del 8 al 15.
+            Algunos de los registros superiores son registros con un propósito específico. Estos son:
+            \begin{enumerate}
+                \item \textbf{R13 (SP)}: Stack Pointer. Se actualiza automáticamente al hacer push o pop
+                \item \textbf{R14 (LR)}: Long Return Register.
+                \item \textbf{R15 (PC)}: Program Counter Register. Se actualiza automáticamente con la dirección de la próxima instrucción
+            \end{enumerate}
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/registers}
+                \caption{Registers Menu}
+            \end{figure}
+
+            Como se puede ver en la figura 11 cada registro aparece por defecto en formato hexadecimal.
+            Además se puede cambiar el formato entre hexadecimal, signed y unsigned con un simple click.
+
+            El valor de cada registro puede ser modificado en cualquier momento. Clickando en el registro
+            que queremos cambiar abriremos un menú de modificación donde podremos ver el valor actual en
+            todos los formatos disponibles así como introducir un nuevo valor.
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/modifyregister}
+                \caption{Change Register Value}
+            \end{figure}
+
+            Además se comprueba en todo momento que la entrada del usuario sea un nº de 8 bits válido.
+            Ya sea en formato hexadecimal o decimal, no se admiten números negativos, y se habilita el botón
+            de guardar solo si la entrada es correcta.
+
+            En la parte superior derecha tenemos los flags de la CPU. Estos flags se activan en algunas operaciones
+            como las de comparar dependiendo del resultado de dicha operación. En caso de ejecutar el programa sin ir
+            paso a paso el estado de los flags sería siempre el que hay al final de la ejecución, 
+            igual que los registros.
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/flags}
+                \caption{Flags Example}
+            \end{figure}
+
+            En este ejemplo se compara r0 con un 3. Al ser la comparación una resta y dar esta cero se activa
+            el flag correspondiente Z. Los distintos flags son:
+            \begin{enumerate}
+                \item \textbf{Z}: Resultado igual a 0
+                \item \textbf{N}: Resultado negativo
+                \item \textbf{C}: Bit de acarreo
+                \item \textbf{V}: Overflow con signo
+            \end{enumerate}
+
+
+        }
+
+        \newpage
         \subsubsection{Memoria}
         {
+            Debajo de los registros está la memoria de la CPU, se inicializa por defecto a 64 palabras (4 bytes)
+            como zona libre y 64 más para el stack. Se puede visualizar toda la memoria a la vez, sólo la zona de datos o sólo el stack.
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/memory}
+                \caption{Memory Menu}
+            \end{figure}
+
+            El usuario puede utilizar directivas de ensamblador para inicializar la memoria
+            con cualquier valor que necesite durante la ejecución. En caso de que el programa necesite más memoria de la disponible esta crece de forma automática, esto puede pasar
+            en operaciones como push o en programas que soliciten guardar muchos datos iniciales.
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/memorydata}
+                \caption{Memory Data Example}
+            \end{figure}
+            Como se puede ver en este ejemplo hay diferentes directivas para almacenar desde strings, bytes, medias palabras
+            o palabras. Así como directivas para alinear el próximo dato.
+
+            Además del mismo modo que para los registros los valores de la memoria son fácilmente modificables,
+            para ello basta con clickar en la zona de memoria cuyo valor deseamos modificar y se nos abrirá un menú similar al visto
+            para modificar un registro.
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/modifymemory}
+                \caption{Change Memory Value}
+            \end{figure}
+
+            \begin{figure}[h]
+                \centering
+                \includegraphics[width=0.85\textwidth]{images/stack}
+                \caption{Stack Example}
+            \end{figure}            
         }
     }
 
