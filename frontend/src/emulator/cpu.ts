@@ -448,7 +448,8 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
               this.regs[destReg] = 0x0
             } else {
               if (ins.operation === Operation.LDR) {
-                this.regs[destReg] = this.memory[address / 4];
+                // TODO: Not load if not aligned to 4, just continue execution
+                this.regs[destReg] = this.memory[Math.floor(address / 4)];
               } else if (ins.operation === Operation.LDRH) {
                 if (address % 4 === 0) {
                   this.regs[destReg] = this.memory[address / 4] & 0xFFFF;
