@@ -67,21 +67,21 @@ const Registers = () => {
       <Popover.Header as="h3">Register {selectedRegister.toUpperCase()}</Popover.Header>
       <Popover.Body>
         <Table bordered>
-        <tbody>
-          <tr>
-            <td>Hex.</td>
-            <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'hexadecimal')}</Badge></td>
-          </tr>
-          <tr>
-            <td>Signed</td>
-            <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'signed')}</Badge></td>
-          </tr>
-          <tr>
-            <td>Unsigned</td>
-            <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'unsigned')}</Badge></td>
-          </tr>
-        </tbody>
-      </Table>
+          <tbody>
+            <tr>
+              <td>Hex.</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'hexadecimal')}</Badge></td>
+            </tr>
+            <tr>
+              <td>Signed</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'signed')}</Badge></td>
+            </tr>
+            <tr>
+              <td>Unsigned</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseRegister(selectedRegister, 'unsigned')}</Badge></td>
+            </tr>
+          </tbody>
+        </Table>
         <Form onSubmit={(e) => e.preventDefault()}>
           <FormGroup>
             <Form.Label htmlFor="inputRegValue">Register value</Form.Label>

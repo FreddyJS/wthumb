@@ -7,6 +7,7 @@ import FormGroup from "react-bootstrap/FormGroup";
 import Table from 'react-bootstrap/Table';
 import Popover from "react-bootstrap/Popover";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Badge from "react-bootstrap/Badge";
 
 import { selectMemory, updateMemory } from "reducers/cpuReducer";
 import { useAppDispatch, useAppSelector } from 'hooks';
@@ -54,10 +55,48 @@ const Memory = () => {
     return str;
   }
 
+  const parseMemory = (value: number, format: string): string => {
+    if (format === 'hexadecimal') {
+      return '0x' + value.toString(16).padStart(8, '0').toUpperCase();
+    } else if (format === 'signed') {
+      if ((value >> 0) < 0) {
+        return '-' + (-(value >> 0)).toString(10).padStart(9, '0');
+      } else {
+        return (value >> 0).toString(10).padStart(10, '0');
+      }
+    } else if (format === 'unsigned') {
+      return (value >>> 0).toString(10).padStart(10, '0');
+    } else if (format === 'string') {
+      return wordToString(value);
+    }
+
+    return ''
+  }
+
   const memoryMenu = selectedMemoryAddress === -1 ? (<></>) : (
     <Popover id="popover-mem">
       <Popover.Header as="h3">Memory at 0x{selectedMemoryAddress.toString(16).padStart(8, '0').toUpperCase()}</Popover.Header>
       <Popover.Body>
+      <Table bordered>
+          <tbody>
+            <tr>
+              <td>Hex.</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'hexadecimal')}</Badge></td>
+            </tr>
+            <tr>
+              <td>Signed</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'signed')}</Badge></td>
+            </tr>
+            <tr>
+              <td>Unsigned</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'unsigned')}</Badge></td>
+            </tr>
+            <tr>
+              <td>String</td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'string')}</Badge></td>
+            </tr>
+          </tbody>
+        </Table>
         <Form onSubmit={(e) => e.preventDefault()}>
           <FormGroup>
             <Form.Label htmlFor="inputMemLabel">Memory value</Form.Label>
@@ -91,6 +130,8 @@ const Memory = () => {
     let rows: JSX.Element[] = []
     const start = mode === 'stack' ? memorySize : 0;
     const end = mode === 'data' ? memorySize : memory.length;
+
+    console.log(start, end)
 
     for (let i = start; i < end; i++) {
       const address = i * 4;
