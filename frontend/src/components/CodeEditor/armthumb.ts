@@ -120,7 +120,7 @@ export const armthumb: any = {
     }
 
     // Separator ,
-    if (ch === ',') {
+    if (ch === ',' || ch === '{' || ch === '}' || ch === '[' || ch === ']') {
       stream.eatWhile(/\w/);
       return "contentSeparator";
     }
