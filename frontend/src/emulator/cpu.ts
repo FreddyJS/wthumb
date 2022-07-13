@@ -26,7 +26,7 @@ enum Flags {
 }
 
 const SPREGISTER = 'r13';
-// const LRREGISTER = 'r14';
+const LRREGISTER = 'r14';
 const PCREGISTER = 'r15';
 
 type armCPU_T = {
@@ -73,16 +73,19 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     run() {
       for (let i = this.regs[PCREGISTER] / 2; i < this.program.length; i++) {
         const ins = this.program[i];
+        const currentPC = this.regs[PCREGISTER];
+
         if (ins.break === true) {
           ins.break = false;
           return;
         }
 
         this.execute(ins);
-        if (ins.operation !== Operation.B) {
-          this.regs[PCREGISTER] += 2;
-        } else {
+        if (currentPC !== this.regs[PCREGISTER]) {
+          // The instruction modified the PC Register, should not increment it cause its a jump
           i = (this.regs[PCREGISTER] / 2) - 1;
+        } else {
+          this.regs[PCREGISTER] += 2;
         }
       }
     },
@@ -93,9 +96,10 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       }
 
       const ins = this.program[this.regs[PCREGISTER] / 2];
-      this.execute(ins);
+      const currentPC = this.regs[PCREGISTER];
 
-      if (ins.operation !== Operation.B) {
+      this.execute(ins);
+      if (currentPC === this.regs[PCREGISTER]) {
         this.regs[PCREGISTER] += 2;
       }
     },
@@ -140,7 +144,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.memory = this.memory.concat(new Array(this.stackSize).fill(0));
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 28, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 29, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
@@ -534,7 +538,6 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             for (let i = 0; i < regList.length; i++) {
               let memIndex = this.regs[SPREGISTER] / 4;
-              console.log(memIndex)
               if (memIndex >= this.memory.length) {
                 this.memory.push(this.regs[regList[i].trim()]);
                 this.stackSize++;
@@ -611,6 +614,24 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             } else {
               this.regs[PCREGISTER] += 2;
             }
+          }
+          break;
+
+        case Operation.BL:
+          {
+            const [op1] = ins.operands;
+            const label = op1.value;
+            let pc = 0x00;
+
+            for (let i = 0; i < this.program.length; i++) {
+              if (this.program[i].label === label) {
+                pc = i * 2;
+                break;
+              }
+            }
+
+            this.regs[LRREGISTER] = this.regs[PCREGISTER] + 2;
+            this.regs[PCREGISTER] = pc;
           }
           break;
 

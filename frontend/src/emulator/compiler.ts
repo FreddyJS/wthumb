@@ -196,7 +196,7 @@ function compileDirective(line: string) {
  * @returns 
  */
 function compileInstruction(line: string) {
-  assert(Operation.TOTAL_OPERATIONS === 28, 'Exhaustive handling of operations in lineToInstruction');
+  assert(Operation.TOTAL_OPERATIONS === 29, 'Exhaustive handling of operations in lineToInstruction');
   const words = line.split(' ');
   let args = words
     .slice(1)
@@ -949,7 +949,7 @@ function compileInstruction(line: string) {
         return throwCompilerError('Missing label to jump to');
       }
 
-      for (let i = 0; i < conditions.length; i ++) {
+      for (let i = 0; i < conditions.length; i++) {
         if (words[0].split('b')[1] === '' || words[0].split('b')[1] === conditions[i]) {
           valid = true;
         }
@@ -962,6 +962,14 @@ function compileInstruction(line: string) {
       args = [words[1]]
     } break;
 
+    case Operation.BL: {
+      if (words.length !== 2) {
+        return throwCompilerError('Missing label to jump to');
+      }
+
+      args = [words[1]]
+    } break;
+
     default:
       throw new Error('Unreachable code in lineToInstruction');
   }
@@ -969,7 +977,7 @@ function compileInstruction(line: string) {
   for (let i = 0; i < args.length; i++) {
     let operandType = argToOperandType(args[i]);
     if (operandType === undefined) {
-      if (operation === Operation.B) {
+      if (operation === Operation.B || operation === Operation.BL) {
         instruction.name = words[0];
         operandType = OperandType.Label;
       } else {
@@ -979,7 +987,7 @@ function compileInstruction(line: string) {
 
     const operand: Operand = {
       type: operandType,
-      value: args[i].replace(/sp/, 'r13'),
+      value: args[i].replace(/sp/, 'r13').replace(/lr/, 'r14').replace(/pc/, 'r15'),
     }
     instruction.operands.push(operand);
   }
@@ -1045,6 +1053,8 @@ function compileAssembly(source: string): [Program, number[]] {
 
     if (operation === undefined && firstWord.startsWith('b')) {
       operation = Operation.B;
+    } else if (operation === undefined && firstWord === 'bl') {
+      operation = Operation.BL;
     }
 
     if (operation !== undefined) {

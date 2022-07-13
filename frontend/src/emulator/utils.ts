@@ -29,6 +29,10 @@ function argToOperandType(operand: string): OperandType | undefined {
     type = reg < 8 ? OperandType.LowRegister : reg < 16 ? OperandType.HighRegister : undefined;
   } else if (/^sp$/.test(operand)) {
     type = OperandType.SpRegister;
+  } else if (/^lr$/.test(operand)) {
+    type = OperandType.LrRegister;
+  } else if (/^pc$/.test(operand)) {
+    type = OperandType.PcRegister;
   } else if (/^#0x[0-9a-f]+$/.test(operand) || /^#\d+$/.test(operand)) {
     type = operand.startsWith('#0x') ? OperandType.HexInmediate : OperandType.DecInmediate;
   } else if (/^\[\s*(r\d+|sp)\s*,\s*(#|#0x)\d+\s*\]$/.test(operand)) {
@@ -57,7 +61,7 @@ function argToOperandType(operand: string): OperandType | undefined {
  * @returns true if it's a register
  */
 function isRegisterType(type: OperandType): boolean {
-  return type === OperandType.LowRegister || type === OperandType.HighRegister || type === OperandType.SpRegister;
+  return type === OperandType.LowRegister || type === OperandType.HighRegister || type === OperandType.SpRegister || type === OperandType.LrRegister || type === OperandType.PcRegister;
 }
 
 /**

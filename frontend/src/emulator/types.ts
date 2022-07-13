@@ -41,6 +41,7 @@ enum Operation {
 
   // Jump
   B,
+  BL,
   TOTAL_OPERATIONS,
 }
 
@@ -86,6 +87,7 @@ const wordToOperation: { [key: string]: Operation } = {
 
   // Jump
   b: Operation.B,
+  bl: Operation.BL,
 };
 
 const operationToWord: { [key: number]: string } = {
@@ -130,6 +132,7 @@ const operationToWord: { [key: number]: string } = {
 
   // Jump
   [Operation.B]: 'b',
+  [Operation.BL]: 'bl',
 };
 
 enum OperandType {
@@ -141,6 +144,8 @@ enum OperandType {
   IndirectValue,
   RegisterList,
   Label,
+  LrRegister,
+  PcRegister,
 }
 
 type CompilerError = {
