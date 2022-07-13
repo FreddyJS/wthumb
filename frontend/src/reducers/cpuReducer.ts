@@ -51,7 +51,7 @@ export const cpuSlice = createSlice({
     },
     updateMemory: (state, action) => {
       const index = action.payload.address / 4;
-      state.cpu.memory[index] = action.payload.value;
+      state.cpu.memory.data[index] = action.payload.value;
     },
     runCode: (state, action) => {
       if (state.cpu.error) {

@@ -1,4 +1,4 @@
-import { Operation, OperandType, wordToOperation, Operand, wordToDirective, Directive, dataDirectives, directiveToWord, operationToWord } from './types';
+import { Operation, OperandType, wordToOperation, Operand, wordToDirective, Directive, dataDirectives, directiveToWord, operationToWord, Memory } from './types';
 import type { Program, Instruction } from './types';
 
 import { argToOperandType, assert, inmediateInRange, isAligned, isHighRegister, isInmediateType, isRegisterType } from './utils';
@@ -7,7 +7,7 @@ import { argToOperandType, assert, inmediateInRange, isAligned, isHighRegister, 
 // Global variables used by the compiler
 let program: Program = { ins: [], error: undefined }
 let symbols: { [key: string]: string } = {}
-let memory: number[] = []
+let memory: Memory = { symbols: {}, data: []}
 let memByteIndex = 0
 
 function _throwCompilerError(error: string, line: number | undefined) {
@@ -47,7 +47,7 @@ function cleanInput(source: string): string {
  * @param line 
  * @returns 
  */
-function compileDirective(line: string) {
+function compileDirective(line: string, label: string | undefined) {
   let directive = wordToDirective[line.split(' ')[0]];
   line = line.split(' ').slice(1).join(' ').trim();
 
@@ -98,6 +98,12 @@ function compileDirective(line: string) {
           bytesToSave = 8;
         }
 
+        if (label !== undefined && memory.symbols[label] !== undefined) {
+          return throwCompilerError('Memory label already defined');
+        } else if (label !== undefined) {
+          memory.symbols[label] = memByteIndex;
+        }
+
         for (let i = 0; i < args.length; i++) {
           // TODO: numbers bigger than 0xFFFFFFFF may cause problems
           // Tested with 0xFFFFFFFFFFFFFFFF and it doesn't load correctly
@@ -111,7 +117,7 @@ function compileDirective(line: string) {
             const shifts = (memByteIndex % 4) * 8;
             const byte = value & 0xFF;
 
-            memory[memIndex] = (memory[memIndex] | (byte << shifts)) >>> 0
+            memory.data[memIndex] = (memory.data[memIndex] | (byte << shifts)) >>> 0
             value = value >>> 8;
             memByteIndex++;
             savedBytes++;
@@ -128,11 +134,17 @@ function compileDirective(line: string) {
           return throwCompilerError('Invalid number of arguments for SPACE. Expected 1');
         }
 
+        if (label !== undefined && memory.symbols[label] !== undefined) {
+          return throwCompilerError('Memory label already defined');
+        } else if (label !== undefined) {
+          memory.symbols[label] = memByteIndex;
+        }
+
         const N = Number(args[0]);
         for (let i = 0; i < N; i++) {
           const memIndex = Math.floor(memByteIndex / 4);
           const shifts = (memByteIndex % 4) * 8;
-          memory[memIndex] = (memory[memIndex] | (0x00 << shifts)) >>> 0
+          memory.data[memIndex] = (memory.data[memIndex] | (0x00 << shifts)) >>> 0
           memByteIndex++;
         }
       } break;
@@ -163,24 +175,29 @@ function compileDirective(line: string) {
     case Directive.ASCII:
     case Directive.ASCIZ:
       {
-        if (!/^"\w+(\s+\w+)*"$/.test(line)) {
+        if (!/^".*"$/.test(line)) {
           return throwCompilerError('Invalid string value. Use "Hello"');
         }
 
-        const str = line.replace('"', '').replace('"', '');
+        if (label !== undefined && memory.symbols[label] !== undefined) {
+          return throwCompilerError('Memory label already defined');
+        } else if (label !== undefined) {
+          memory.symbols[label] = memByteIndex;
+        }
 
+        const str = line.replace('"', '').replace('"', '');
         for (let i = 0; i < str.length; i++) {
           const memIndex = Math.floor(memByteIndex / 4);
           const shifts = (memByteIndex % 4) * 8;
 
-          memory[memIndex] = (memory[memIndex] | (str.charCodeAt(i) << shifts)) >>> 0;
+          memory.data[memIndex] = (memory.data[memIndex] | (str.charCodeAt(i) << shifts)) >>> 0;
           memByteIndex++;
         }
 
         if (directive === Directive.ASCIZ) {
           const memIndex = Math.floor(memByteIndex / 4);
           const shifts = (memByteIndex % 4) * 8;
-          memory[memIndex] = (memory[memIndex] | (0x00 << shifts)) >>> 0;
+          memory.data[memIndex] = (memory.data[memIndex] | (0x00 << shifts)) >>> 0;
           memByteIndex++;
         }
       } break;
@@ -704,27 +721,35 @@ function compileInstruction(line: string) {
 
       if (op1Type === undefined || op1Type !== OperandType.LowRegister) {
         return throwCompilerError('Invalid operand 1 for LDR. Expected low register (r[0-7]), got: ' + arg1);
-      } else if (op2Type === undefined || op2Type !== OperandType.IndirectValue) {
-        return throwCompilerError('Invalid operand 2 for LDR. Expected indirect value ([r0, #4]), got: ' + arg2);
+      } else if (op2Type === undefined || (op2Type !== OperandType.IndirectValue && op2Type !== OperandType.Label)) {
+        return throwCompilerError('Invalid operand 2 for LDR. Expected indirect value ([r0, #4]) or =label, got: ' + arg2);
       }
 
-      // Operand two can only use low registers, sp or pc (pc not supported for now)
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
-      const value1Type = argToOperandType(value1);
-      const value2Type = argToOperandType(value2);
+      if (op2Type === OperandType.IndirectValue) {
+        // Operand two can only use low registers, sp or pc (pc not supported for now)
+        const value1 = arg2.split(',')[0].replace('[', '').replace(']', '').trim();
+        let value2 = arg2.split(',')[1];
+        if (value2 === undefined) {
+          value2 = '#0';
+        } else {
+          value2 = value2.replace(']', '').trim();
+        }
 
-      if (value1Type !== OperandType.LowRegister && value1Type !== OperandType.SpRegister) {
-        return throwCompilerError('Invalid register for LDR in indirect value. Use low register or sp.');
-      } else if (value1Type === OperandType.SpRegister && !isInmediateType(value2Type)) {
-        return throwCompilerError('Invalid 2 value for indirect values. Only #Inm allowed with sp');
-      }
-
-      const maxInmediate = value1Type === OperandType.SpRegister ? 1020 : 124;
-      if (value2Type !== OperandType.LowRegister && !isInmediateType(value2Type)) {
-        return throwCompilerError('Invalid 2 value for indirect values. Expected low register or #Inm');
-      } else if (isInmediateType(value2Type) && (!inmediateInRange(value2, maxInmediate) || !isAligned(value2, 4))) {
-        return throwCompilerError('Invalid inmediate value in indirect value. Expected #Inm 0-' + maxInmediate + ' aligned to 4');
+        const value1Type = argToOperandType(value1);
+        const value2Type = argToOperandType(value2);
+  
+        if (value1Type !== OperandType.LowRegister && value1Type !== OperandType.SpRegister) {
+          return throwCompilerError('Invalid register for LDR in indirect value. Use low register or sp.');
+        } else if (value1Type === OperandType.SpRegister && !isInmediateType(value2Type)) {
+          return throwCompilerError('Invalid 2 value for indirect values. Only #Inm allowed with sp');
+        }
+  
+        const maxInmediate = value1Type === OperandType.SpRegister ? 1020 : 124;
+        if (value2Type !== OperandType.LowRegister && !isInmediateType(value2Type)) {
+          return throwCompilerError('Invalid 2 value for indirect values. Expected low register or #Inm');
+        } else if (isInmediateType(value2Type) && (!inmediateInRange(value2, maxInmediate) || !isAligned(value2, 4))) {
+          return throwCompilerError('Invalid inmediate value in indirect value. Expected #Inm 0-' + maxInmediate + ' aligned to 4');
+        }
       }
     } break;
 
@@ -839,8 +864,14 @@ function compileInstruction(line: string) {
       }
 
       // Operand two can only use low registers, sp or pc (pc not supported for now)
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1 = arg2.split(',')[0].replace('[', '').replace(']', '').trim();
+      let value2 = arg2.split(',')[1];
+      if (value2 === undefined) {
+        value2 = '#0';
+      } else {
+        value2 = value2.replace(']', '').trim();
+      }
+
       const value1Type = argToOperandType(value1);
       const value2Type = argToOperandType(value2);
 
@@ -1005,7 +1036,7 @@ function compileInstruction(line: string) {
   program.ins.push(instruction);
 }
 
-function compileAssembly(source: string): [Program, number[]] {
+function compileAssembly(source: string): [Program, Memory] {
   const labels: { [key: string]: number } = {};
   const lines = source.split('\n');
   let inTextSection = true;
@@ -1091,7 +1122,7 @@ function compileAssembly(source: string): [Program, number[]] {
         continue;
       }
 
-      compileDirective(lines[i]);
+      compileDirective(lines[i], label);
 
       // Stop compilation if an error occured
       if (program.error !== undefined) {
@@ -1110,15 +1141,17 @@ function compileAssembly(source: string): [Program, number[]] {
 
   for (let i = 0; i < program.ins.length; i++) {
     const instruction = program.ins[i];
-    if (instruction.label !== undefined && labels[instruction.label] === undefined) {
-      program.error = {
-        line: 0,
-        message: 'Unknown label to jump: ' + instruction.label,
+    if (instruction.operation === Operation.B || instruction.operation === Operation.BL) {
+      if (labels[instruction.operands[0].value] === undefined) {
+        program.error = {
+          line: 0,
+          message: 'Unknown label to jump: ' + instruction.operands[0].value,
+        }
       }
     }
   }
 
-  const retMemory = [...memory];
+  const retMemory = { ...memory };
   const retProgram = { ...program };
 
   resetCompiler();
@@ -1129,7 +1162,7 @@ function resetCompiler() {
   program = { ins: [], error: undefined }
   memByteIndex = 0;
   symbols = {}
-  memory = []
+  memory = { symbols: {}, data: [] }
 }
 
 export default compileAssembly;

@@ -81,19 +81,19 @@ const Memory = () => {
           <tbody>
             <tr>
               <td>Hex.</td>
-              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'hexadecimal')}</Badge></td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory.data[Math.floor(selectedMemoryAddress/4)], 'hexadecimal')}</Badge></td>
             </tr>
             <tr>
               <td>Signed</td>
-              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'signed')}</Badge></td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory.data[Math.floor(selectedMemoryAddress/4)], 'signed')}</Badge></td>
             </tr>
             <tr>
               <td>Unsigned</td>
-              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'unsigned')}</Badge></td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory.data[Math.floor(selectedMemoryAddress/4)], 'unsigned')}</Badge></td>
             </tr>
             <tr>
               <td>String</td>
-              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory[Math.floor(selectedMemoryAddress/4)], 'string')}</Badge></td>
+              <td><Badge bg="primary" className="registers-item-value">{parseMemory(memory.data[Math.floor(selectedMemoryAddress/4)], 'string')}</Badge></td>
             </tr>
           </tbody>
         </Table>
@@ -101,7 +101,7 @@ const Memory = () => {
           <FormGroup>
             <Form.Label htmlFor="inputMemLabel">Memory value</Form.Label>
             <Form.Control
-              placeholder={"0x" + memory[selectedMemoryAddress/4].toString(16).padStart(8, '0').toUpperCase()}
+              placeholder={"0x" + memory.data[selectedMemoryAddress/4].toString(16).padStart(8, '0').toUpperCase()}
               isInvalid={!isValidValue}
               isValid={isValidValue}
               value={memoryValue}
@@ -129,7 +129,7 @@ const Memory = () => {
   const tableRows = () => {
     let rows: JSX.Element[] = []
     const start = mode === 'stack' ? memorySize : 0;
-    const end = mode === 'data' ? memorySize : memory.length;
+    const end = mode === 'data' ? memorySize : memory.data.length;
 
     console.log(start, end)
 
@@ -152,10 +152,10 @@ const Memory = () => {
               {/* Address and value in hexadecimal with at least 2 digits*/}
               <td>{strAddress} - {strEndAddress}</td>
               <td>
-                0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
+                0x{memory.data[i].toString(16).padStart(8, '0').toUpperCase()}
               </td>
               <td>
-                {wordToString(memory[i])}
+                {wordToString(memory.data[i])}
               </td>
             </tr>
           </OverlayTrigger>
@@ -166,10 +166,10 @@ const Memory = () => {
               {/* Address and value in hexadecimal with at least 2 digits*/}
               <td>{strAddress} - {strEndAddress}</td>
               <td>
-                0x{memory[i].toString(16).padStart(8, '0').toUpperCase()}
+                0x{memory.data[i].toString(16).padStart(8, '0').toUpperCase()}
               </td>
               <td>
-                {wordToString(memory[i])}
+                {wordToString(memory.data[i])}
               </td>
             </tr>
         );

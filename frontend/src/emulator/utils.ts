@@ -47,6 +47,8 @@ function argToOperandType(operand: string): OperandType | undefined {
     type = OperandType.IndirectValue;
   } else if (/^\[\s*r\d+\s*,\s*r\d+\s*\]$/.test(operand)) {
     type = OperandType.IndirectValue;
+  } else if (/^\[\s*r\d+\s*\]$/.test(operand)) {
+    type = OperandType.IndirectValue;
   } else if (operand.startsWith('{') && operand.endsWith('}')) {
     operand = operand.replace('{', '').replace('}', '');
     const regs = operand.split(',');
@@ -56,7 +58,9 @@ function argToOperandType(operand: string): OperandType | undefined {
       }
     }
 
-    type =OperandType.RegisterList;
+    type = OperandType.RegisterList;
+  } else if (/^(#|=)\w+$/.test(operand)) {
+    type = OperandType.Label;
   }
 
   return type;
@@ -121,8 +125,13 @@ function inmediateOperandNumber(operand: Operand): number {
  * @returns Tuple with [value1, value2]
  */
 function indirectOperandValues(operand: Operand): [Operand, Operand] {
-  const value1 = operand.value.split(',')[0].replace('[', '').trim();
-  const value2 = operand.value.split(',')[1].replace(']', '').trim();
+  const value1 = operand.value.split(',')[0].replace('[', '').replace(']', '').trim();
+  let value2 = operand.value.split(',')[1];
+  if (value2 === undefined) {
+    value2 = '#0';
+  } else {
+    value2 = value2.replace(']', '').trim();
+  }
 
   const value1Type = argToOperandType(value1);
   const value2Type = argToOperandType(value2);

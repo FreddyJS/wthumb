@@ -1,6 +1,6 @@
 import compileAssembly from './compiler';
 
-import type { Instruction } from './types';
+import type { Instruction, Memory } from './types';
 import { Operation, OperandType, Program, CompilerError } from './types';
 import { assert, indirectOperandValues, inmediateOperandNumber, isInmediateType } from './utils';
 
@@ -35,7 +35,7 @@ type armCPU_T = {
   n: boolean;
   c: boolean;
   v: boolean;
-  memory: number[];
+  memory: Memory;
   memSize: number;
   stackSize: number;
   program: Instruction[];
@@ -63,7 +63,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     n: false,
     c: false,
     v: false,
-    memory: new Array(props.memorySize + props.stackSize).fill(0),
+    memory: { symbols: {}, data: new Array(props.memorySize + props.stackSize).fill(0) },
     memSize: props.memorySize,
     stackSize: props.stackSize,
     program: [],
@@ -109,7 +109,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       }
     },
     reset() {
-      this.memory = new Array(this.memSize + this.stackSize).fill(0);
+      this.memory = { symbols: {}, data: new Array(props.memorySize + props.stackSize).fill(0) };
       this.regs = { ...defaultRegs };
       this.regs['r13'] = this.memSize * 4;
       this.error = undefined;
@@ -132,21 +132,22 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       }
 
       this.program = program.ins;
-      for (let i = 0; i < initialMemory.length; i++) {
-        if (i >= this.memory.length) {
-          this.memory.push(initialMemory[i]);
+      for (let i = 0; i < initialMemory.data.length; i++) {
+        if (i >= this.memory.data.length) {
+          this.memory.data.push(initialMemory.data[i]);
           this.memSize++;
         } else {
           if (i >= this.memSize) {
             this.memSize++;
           }
 
-          this.memory[i] = initialMemory[i];
+          this.memory.data[i] = initialMemory.data[i];
         }
       }
+      this.memory.symbols = initialMemory.symbols;
 
       this.regs['r13'] = this.memSize * 4;
-      this.memory = this.memory.concat(new Array(this.stackSize).fill(0));
+      this.memory.data = this.memory.data.concat(new Array(this.stackSize).fill(0));
     },
     execute(ins: Instruction) {
       assert(Operation.TOTAL_OPERATIONS === 30, 'Exhaustive handling of operations in execute');
@@ -448,33 +449,38 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const [op1, op2] = ins.operands;
             const destReg = op1.value;
 
+            if (ins.operation === Operation.LDR && ins.operands[1].type === OperandType.Label) {
+              this.regs[destReg] = this.memory.symbols[ins.operands[1].value.replace('=', '')];
+              return;
+            }
+
             const [value1, value2] = indirectOperandValues(op2);
             const offset = isInmediateType(value2.type) ? inmediateOperandNumber(value2) : this.regs[value2.value];
             const address = this.regs[value1.value] + offset;
 
-            if (address / 4 >= this.memory.length) {
+            if (address / 4 >= this.memory.data.length) {
               // TODO: This is out of memory, should return an error
               this.regs[destReg] = 0x0
             } else {
               if (ins.operation === Operation.LDR) {
                 // TODO: Not load if not aligned to 4, just continue execution
-                this.regs[destReg] = this.memory[Math.floor(address / 4)];
+                this.regs[destReg] = this.memory.data[Math.floor(address / 4)];
               } else if (ins.operation === Operation.LDRH) {
                 if (address % 4 === 0) {
-                  this.regs[destReg] = this.memory[address / 4] & 0xFFFF;
+                  this.regs[destReg] = this.memory.data[address / 4] & 0xFFFF;
                 } else {
-                  this.regs[destReg] = this.memory[Math.floor(address / 4)] >>> 16;
+                  this.regs[destReg] = this.memory.data[Math.floor(address / 4)] >>> 16;
                 }
               } else if (ins.operation === Operation.LDRB) {
                 const mod = address % 4;
-                this.regs[destReg] = this.memory[Math.floor(address / 4)] & (0xFF << (8 * mod));
+                this.regs[destReg] = this.memory.data[Math.floor(address / 4)] & (0xFF << (8 * mod));
                 this.regs[destReg] = this.regs[destReg] >>> (8 * mod)
               } else if (ins.operation === Operation.LDRSH) {
                 if (address % 4 === 0) {
-                  this.regs[destReg] = this.memory[address / 4] & 0xFFFF;
+                  this.regs[destReg] = this.memory.data[address / 4] & 0xFFFF;
                   this.regs[destReg] = (this.regs[destReg] << 16) >> 16;
                 } else {
-                  this.regs[destReg] = this.memory[Math.floor(address / 4)] >>> 16;
+                  this.regs[destReg] = this.memory.data[Math.floor(address / 4)] >>> 16;
                   this.regs[destReg] = (this.regs[destReg] << 16) >> 16;
                 }
 
@@ -483,7 +489,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
                 }
               } else if (ins.operation === Operation.LDRSB) {
                 const mod = address % 4;
-                this.regs[destReg] = this.memory[Math.floor(address / 4)] & (0xFF << (8 * mod));
+                this.regs[destReg] = this.memory.data[Math.floor(address / 4)] & (0xFF << (8 * mod));
                 this.regs[destReg] = this.regs[destReg] >>> (8 * mod)
                 this.regs[destReg] = (this.regs[destReg] << 24) >> 24;
 
@@ -506,18 +512,18 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
             const offset = isInmediateType(value2.type) ? inmediateOperandNumber(value2) : this.regs[value2.value];
             const address = this.regs[value1.value] + offset;
 
-            if (address / 4 >= this.memory.length) {
+            if (address / 4 >= this.memory.data.length) {
               // TODO: This is out of memory, should return an error
               // this.regs[destReg] = 0x0
             } else {
               if (ins.operation === Operation.STR) {
-                this.memory[address / 4] = this.regs[destReg];
+                this.memory.data[address / 4] = this.regs[destReg];
               } else if (ins.operation === Operation.STRH) {
                 const toSave = this.regs[destReg] & 0xFFFF;
                 if (address % 4 === 0) {
-                  this.memory[address / 4] = (this.memory[address / 4] & 0xFFFF0000) | toSave;
+                  this.memory.data[address / 4] = (this.memory.data[address / 4] & 0xFFFF0000) | toSave;
                 } else {
-                  this.memory[Math.floor(address / 4)] = (this.memory[address / 4] & 0xFFFF) | (toSave << 16);
+                  this.memory.data[Math.floor(address / 4)] = (this.memory.data[address / 4] & 0xFFFF) | (toSave << 16);
                 }
               } else if (ins.operation === Operation.STRB) {
                 const toSave = this.regs[destReg] & 0x00FF;
@@ -530,7 +536,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
                 } else if (mod === 3) {
                   mask = 0x00FFFFFF
                 }
-                this.memory[Math.floor(address / 4)] = (this.memory[Math.floor(address / 4)] & mask) | (toSave << (8 * mod))
+                this.memory.data[Math.floor(address / 4)] = (this.memory.data[Math.floor(address / 4)] & mask) | (toSave << (8 * mod))
               }
             }
           }
@@ -543,11 +549,11 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
 
             for (let i = 0; i < regList.length; i++) {
               let memIndex = this.regs[SPREGISTER] / 4;
-              if (memIndex >= this.memory.length) {
-                this.memory.push(this.regs[regList[i].trim()]);
+              if (memIndex >= this.memory.data.length) {
+                this.memory.data.push(this.regs[regList[i].trim()]);
                 this.stackSize++;
               } else {
-                this.memory[memIndex] = this.regs[regList[i].trim()];
+                this.memory.data[memIndex] = this.regs[regList[i].trim()];
               }
               this.regs[SPREGISTER] += 4;
               // this.memSize++;
@@ -565,7 +571,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
               if (memIndex < 0) {
                 this.regs[regList[i].trim()] = 0x00;
               } else {
-                this.regs[regList[i].trim()] = this.memory[memIndex];
+                this.regs[regList[i].trim()] = this.memory.data[memIndex];
               }
               this.regs[SPREGISTER] -= 4;
             }

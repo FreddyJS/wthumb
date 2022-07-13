@@ -173,6 +173,11 @@ type Instruction = {
   label?: string;
 };
 
+type Memory = {
+  symbols: { [key: string]: number };
+  data: number[];
+}
+
 // Assembler directives
 enum Directive {
   ALIGN,
@@ -244,4 +249,4 @@ type Program = {
 };
 
 export { Operation, OperandType, Directive, wordToOperation, operationToWord, wordToDirective, directiveToWord, dataDirectives };
-export type { CompilerError, Operand, Instruction, Program };
+export type { CompilerError, Operand, Instruction, Program, Memory };
