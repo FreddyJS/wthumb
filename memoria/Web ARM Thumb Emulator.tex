@@ -153,8 +153,8 @@
         Puede ser empleado por cualquier otra aplicación que use TypeScript. Está dividido en tres grandes partes:
         \begin{enumerate}
             \item \textbf{Compilador}: Parte del código encargada de comprobar y parsear la entrada.
-            \item \textbf{CPU}: Parte encargada de la ejecución del programa compilado.
-            \item \textbf{Tests Unitarios}: Parte encargada de la ejecución del programa compilado.
+            \item \textbf{CPU}: Parte encargada de la ejecución del programa.
+            \item \textbf{Tests Unitarios}: Conjunto de tests de la cpu.
         \end{enumerate}
     
         % \begin{figure}[h]
@@ -179,7 +179,7 @@
             \item \textbf{Program}. Programa compilado. Consta de un array de instrucciones y un posible error.
         \end{enumerate}
 
-        Los datos solicitados por el programa mediante las directivas de ensamblador (.byte, .asciz, ...)
+        Los datos iniciales del programa especificados mediante las directivas de ensamblador (.byte, .asciz, ...)
         son almcenados en un array de números enteros para después cargarse en la cpu junto con el programa.
 
         Se exporta una única función \textbf{compileAssembly} que recibe una string con el código ensamblador y retorna un objeto
@@ -195,7 +195,7 @@
         que se inicializa con la dirección de memoria del stack y se actualiza al realizar operaciones en él. \\
 
         \textbf{CPSR (Z, N, C, V)} \\
-        Por simplicidad, y dado que se asume que la ejecución es siempre en el mismo como se indica previamente,
+        Por simplicidad, y dado que se asume que la ejecución es siempre en el mismo, como se indica previamente,
         se simulan únicamente los 4 bits más significativos (Z, N, C y V), cada uno es miembro del objeto cpu
         de tipo boolean. \\
 
@@ -217,6 +217,7 @@
             \item \textbf{run()}: Ejecuta el programa cargado. Retorna al finalizar la ejecución o al encontrar un breakpoint.
             \item \textbf{step()}: Ejecuta la siguiente instrucción indicada por el registro PC.
             \item \textbf{execute(ins: Instruction)}: Empleado por los dos anteriores, recibe la instrucción a ejecutar y realiza la operación en cuestión.
+                Implementa la lógica de cada operación del subconjunto de operaciones de ARM Thumb.
                 Activando o desactivando flags según corresponda y modificando los registros o memoria.
             \item \textbf{loadAssembly(assembly: string)}: Llama a \textbf{compileAssembly} para compilar y posteriormente cargar el código ensamblador, en caso de que no haya errores.
                 Inicializa la memoria con los valores de la memoria inicial que devuelve el compilador. En caso de haber algún error lo almacena en el correspondiente campo de la cpu
@@ -229,7 +230,7 @@
         
         Cada test tiene un archivo con el código ensamblador a compilar y ejecutar, como primer paso se compila el código
         mediante un crosscompiler para ARM. De no haber error se compila mediante el simulador, se comprueba que no hayan ocurrido errores y por
-        último se ejecuta. \\
+        último se ejecuta.
 
         \begin{figure}[h]
          \centering
@@ -439,12 +440,15 @@
 \section{Referencias}
 {
     \begin{enumerate}
-        \item \textbf{ARM Developer Documentation}. \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}{The Thumb-state register set}, 
-            \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}{Operating Modes}, \href{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}{Thumb instruction summary}
+        \item \textbf{ARM Developer Documentation}. \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}, 
+            \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}, \href{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en},
         \item \textbf{CREATOR}. \href{https://creatorsim.github.io/creator/}{https://creatorsim.github.io/creator/}
+        \item \textbf{QtARMSim}. \href{http://lorca.act.uji.es/project/qtarmsim/}{http://lorca.act.uji.es/project/qtarmsim/}
+        \item \textbf{React Documentation}. \href{https://es.reactjs.org/}{https://es.reactjs.org/}
         \item \textbf{React-Redux}. \href{https://react-redux.js.org/}{https://react-redux.js.org/}, \href{https://react-redux.js.org/using-react-redux/usage-with-typescript}{https://react-redux.js.org/using-react-redux/usage-with-typescript}
         \item \textbf{React CodeMirror}. \href{https://uiwjs.github.io/react-codemirror/}{https://uiwjs.github.io/react-codemirror/}
-        \item \textbf{CodeMirror Documentation}. \href{https://codemirror.net/docs/}{https://codemirror.net/docs/}
+        \item \textbf{CodeMirror Documentation}. \href{https://codemirror.net/docs/}{https://codemirror.net/docs/}, \href{https://github.com/codemirror/legacy-modes}{https://github.com/codemirror/legacy-modes}
+        \item \textbf{React Bootstrap}. \href{https://react-bootstrap.github.io/}{https://react-bootstrap.github.io/}
     \end{enumerate}
 }
 
