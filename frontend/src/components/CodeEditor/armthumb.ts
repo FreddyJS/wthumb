@@ -150,6 +150,18 @@ export const armthumb: any = {
       if (cur === 'sp') {
         return registers.sp;
       }
+    } else if (ch === 'l') {
+      stream.eatWhile(/\w/);
+      cur = stream.current().toLowerCase();
+      if (cur === 'lr') {
+        return registers.lr;
+      }
+    } else if (ch === 'p') {
+      stream.eatWhile(/\w/);
+      cur = stream.current().toLowerCase();
+      if (cur === 'pc') {
+        return registers.pc;
+      }
     }
 
     // Words. Tags (labels) and keywords (instructions).
