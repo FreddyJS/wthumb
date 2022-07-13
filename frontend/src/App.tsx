@@ -31,15 +31,16 @@ const codeExample =
 `; This a simple example in arm thumb!
 
 .text ; Start of .text section. This is where the code will be placed.
-  mov r0, #2    ; r0 = 2
-  add r0, #1    ; r0 = 3
-  add sp, #8    ; sp = sp + 8
-  add sp, #4    ; sp = sp + 4 = 12
+  mov r0, #5
+  mov r1, #5
+  add r0, r1
+  cmp r0, #10
+  beq stop
 
-  mov r1, #0x2  ; r1 = 2
-  add r1, r1    ; r1 = 4
-  mov r9, r1    ; r9 = 4
-  mov r8, r9    ; r8 = 4`
+  mov r0, #0
+  mov r1, #0
+
+stop:  wfi`
 ;
 
 const warningMessages = [
