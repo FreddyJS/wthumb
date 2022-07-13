@@ -196,7 +196,7 @@ function compileDirective(line: string) {
  * @returns 
  */
 function compileInstruction(line: string) {
-  assert(Operation.TOTAL_OPERATIONS === 29, 'Exhaustive handling of operations in lineToInstruction');
+  assert(Operation.TOTAL_OPERATIONS === 30, 'Exhaustive handling of operations in lineToInstruction');
   line = line.replace(/sp/g, 'r13').replace(/lr/g, 'r14').replace(/pc/g, 'r15');
   const words = line.split(' ');
   let args = words
@@ -974,6 +974,11 @@ function compileInstruction(line: string) {
 
       args = [words[1]]
     } break;
+
+    case Operation.WFI:
+      // Nothing to do, indicates end of execution
+      args = []
+      break;
 
     default:
       throw new Error('Unreachable code in lineToInstruction');

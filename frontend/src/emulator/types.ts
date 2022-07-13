@@ -42,6 +42,9 @@ enum Operation {
   // Jump
   B,
   BL,
+
+  // Stop
+  WFI,
   TOTAL_OPERATIONS,
 }
 
@@ -88,6 +91,7 @@ const wordToOperation: { [key: string]: Operation } = {
   // Jump
   b: Operation.B,
   bl: Operation.BL,
+  wfi: Operation.WFI,
 };
 
 const operationToWord: { [key: number]: string } = {
@@ -133,6 +137,9 @@ const operationToWord: { [key: number]: string } = {
   // Jump
   [Operation.B]: 'b',
   [Operation.BL]: 'bl',
+
+  // Stop
+  [Operation.WFI]: 'wfi',
 };
 
 enum OperandType {

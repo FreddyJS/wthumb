@@ -21,6 +21,7 @@ import Help from 'components/Help';
 import { runCode, step, setError, updateProgram, reset } from 'reducers/cpuReducer';
 
 import axios from 'axios';
+import { Operation } from 'emulator';
 
 axios.interceptors.response.use(undefined, function axiosException(err) {
   return Promise.reject(err)
@@ -61,7 +62,7 @@ function App() {
   const [toastMessage, setToastMessage] = useState('');
 
   const runProgram = () => {
-    if (cpu.regs['r15'] >= cpu.program.length * 2) {
+    if (cpu.regs['r15'] >= cpu.program.length * 2 || cpu.program[cpu.regs['r15'] / 2].operation === Operation.WFI) {
       setToastMessage(warningMessages[0]);
     } else {
       dispatch(runCode(code));
@@ -69,7 +70,7 @@ function App() {
   }
 
   const stepInto = () => {
-    if (cpu.regs['r15'] >= cpu.program.length * 2) {
+    if (cpu.regs['r15'] >= cpu.program.length * 2 || cpu.program[cpu.regs['r15'] / 2].operation === Operation.WFI) {
       setToastMessage(warningMessages[0]);
       return false;
     } else {

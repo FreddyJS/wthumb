@@ -73,6 +73,11 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
     run() {
       for (let i = this.regs[PCREGISTER] / 2; i < this.program.length; i++) {
         const ins = this.program[i];
+        if (ins.operation === Operation.WFI) {
+          // End of execution
+          return;
+        }
+
         const currentPC = this.regs[PCREGISTER];
 
         if (ins.break === true) {
@@ -90,7 +95,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       }
     },
     step() {
-      if (this.regs[PCREGISTER] / 2 >= this.program.length) {
+      if (this.regs[PCREGISTER] / 2 >= this.program.length || this.program[this.regs[PCREGISTER] / 2].operation === Operation.WFI) {
         console.log('Program finished');
         return;
       }
@@ -144,7 +149,7 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.memory = this.memory.concat(new Array(this.stackSize).fill(0));
     },
     execute(ins: Instruction) {
-      assert(Operation.TOTAL_OPERATIONS === 29, 'Exhaustive handling of operations in execute');
+      assert(Operation.TOTAL_OPERATIONS === 30, 'Exhaustive handling of operations in execute');
       switch (ins.operation) {
         case Operation.MOV:
           {
