@@ -27,6 +27,13 @@ function argToOperandType(operand: string): OperandType | undefined {
   if (/^r\d+$/.test(operand)) {
     const reg = parseInt(operand.slice(1), 10);
     type = reg < 8 ? OperandType.LowRegister : reg < 16 ? OperandType.HighRegister : undefined;
+    if (reg === 13) {
+      type = OperandType.SpRegister;
+    } else if (reg === 14) {
+      type = OperandType.LrRegister;
+    } else if (reg === 15) {
+      type = OperandType.PcRegister;
+    }
   } else if (/^sp$/.test(operand)) {
     type = OperandType.SpRegister;
   } else if (/^lr$/.test(operand)) {
@@ -62,6 +69,10 @@ function argToOperandType(operand: string): OperandType | undefined {
  */
 function isRegisterType(type: OperandType): boolean {
   return type === OperandType.LowRegister || type === OperandType.HighRegister || type === OperandType.SpRegister || type === OperandType.LrRegister || type === OperandType.PcRegister;
+}
+
+function isHighRegister(type: OperandType): boolean {
+  return type === OperandType.HighRegister || type === OperandType.SpRegister || type === OperandType.LrRegister || type === OperandType.PcRegister;
 }
 
 /**
@@ -142,4 +153,4 @@ function isAligned(addr: string, size: number): boolean {
   return parseInt(addr.replace('#', '')) % size === 0;
 }
 
-export { assert, argToOperandType, isRegisterType, isInmediateType, inmediateInRange, inmediateOperandNumber, indirectOperandValues, isAligned }
+export { assert, argToOperandType, isRegisterType, isHighRegister, isInmediateType, inmediateInRange, inmediateOperandNumber, indirectOperandValues, isAligned }

@@ -1,7 +1,7 @@
 import { Operation, OperandType, wordToOperation, Operand, wordToDirective, Directive, dataDirectives, directiveToWord, operationToWord } from './types';
 import type { Program, Instruction } from './types';
 
-import { argToOperandType, assert, inmediateInRange, isAligned, isInmediateType, isRegisterType } from './utils';
+import { argToOperandType, assert, inmediateInRange, isAligned, isHighRegister, isInmediateType, isRegisterType } from './utils';
 
 
 // Global variables used by the compiler
@@ -197,6 +197,7 @@ function compileDirective(line: string) {
  */
 function compileInstruction(line: string) {
   assert(Operation.TOTAL_OPERATIONS === 29, 'Exhaustive handling of operations in lineToInstruction');
+  line = line.replace(/sp/g, 'r13').replace(/lr/g, 'r14').replace(/pc/g, 'r15');
   const words = line.split(' ');
   let args = words
     .slice(1)
@@ -240,7 +241,7 @@ function compileInstruction(line: string) {
         return throwCompilerError('Invalid operand 1 for MOV. Expected r[0-15] or sp, got ' + args[0]);
       } else if (op2Type === undefined) {
         return throwCompilerError('Invalid operand 2 for MOV. Expected register or #8bit_Inm, got ' + args[1]);
-      } else if ((op1Type === OperandType.SpRegister || op1Type === OperandType.HighRegister) && isInmediateType(op2Type)) {
+      } else if (isHighRegister(op1Type) && isInmediateType(op2Type)) {
         return throwCompilerError('Invalid operand 2 for MOV. Only low registers allowed with inmediate values');
       }
 
@@ -277,7 +278,9 @@ function compileInstruction(line: string) {
               return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + args[1]);
             }
             break;
-
+            
+          case OperandType.LrRegister:
+          case OperandType.PcRegister:
           case OperandType.HighRegister:
             if (isInmediateType(op2Type)) {
               return throwCompilerError('Invalid operand 2 for ADD. Only low registers are allowed with inmediate values');
@@ -343,11 +346,13 @@ function compileInstruction(line: string) {
               } else {
                 return throwCompilerError('Invalid operand 3 for ADD. Expected #Inm, got ' + args[2]);
               }
-            } else if (op2Type !== OperandType.HighRegister) {
+            } else if (!isRegisterType(op2Type)) {
               return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15], got ' + args[1]);
             }
             break;
 
+          case OperandType.LrRegister:
+          case OperandType.PcRegister:
           case OperandType.HighRegister:
             if (!isRegisterType(op2Type)) {
               return throwCompilerError('Invalid operand 2 for ADD. Expected r[0-15], got ' + args[1]);
@@ -383,10 +388,10 @@ function compileInstruction(line: string) {
       const op2Type = argToOperandType(args[1]);
       const op3Type = argToOperandType(args[2]);
 
-      if (op1Type === undefined || isInmediateType(op1Type) || op1Type === OperandType.HighRegister) {
-        return throwCompilerError('Invalid operand 1 for SUB. Expected r[0-7] or #Inm, got ' + args[0]);
-      } else if (op2Type === undefined || op2Type === OperandType.HighRegister) {
-        return throwCompilerError('Invalid operand 2 for SUB. Expected r[0-7] or #Inm, got ' + args[1]);
+      if (op1Type === undefined || (op1Type !== OperandType.LowRegister && op1Type !== OperandType.SpRegister)) {
+        return throwCompilerError('Invalid operand 1 for SUB. Expected r[0-7] or sp, got ' + args[0]);
+      } else if (op2Type === undefined || (op2Type !== OperandType.LowRegister && op2Type !== OperandType.SpRegister && !isInmediateType(op2Type))) {
+        return throwCompilerError('Invalid operand 2 for SUB. Expected r[0-7], sp or #Inm, got ' + args[1]);
       }
 
       // Short form. op1Type is always a low register or sp
@@ -987,7 +992,7 @@ function compileInstruction(line: string) {
 
     const operand: Operand = {
       type: operandType,
-      value: args[i].replace(/sp/, 'r13').replace(/lr/, 'r14').replace(/pc/, 'r15'),
+      value: args[i],
     }
     instruction.operands.push(operand);
   }
