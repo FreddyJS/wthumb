@@ -7,7 +7,7 @@ import { argToOperandType, assert, inmediateInRange, isAligned, isHighRegister, 
 // Global variables used by the compiler
 let program: Program = { ins: [], error: undefined }
 let symbols: { [key: string]: string } = {}
-let memory: Memory = { symbols: {}, data: []}
+let memory: Memory = { symbols: {}, data: [] }
 let memByteIndex = 0
 
 function _throwCompilerError(error: string, line: number | undefined) {
@@ -295,7 +295,7 @@ function compileInstruction(line: string) {
               return throwCompilerError('Invalid inmediate for ADD. Number out of range. Expected 0-255 but got ' + args[1]);
             }
             break;
-            
+
           case OperandType.LrRegister:
           case OperandType.PcRegister:
           case OperandType.HighRegister:
@@ -737,13 +737,13 @@ function compileInstruction(line: string) {
 
         const value1Type = argToOperandType(value1);
         const value2Type = argToOperandType(value2);
-  
+
         if (value1Type !== OperandType.LowRegister && value1Type !== OperandType.SpRegister) {
           return throwCompilerError('Invalid register for LDR in indirect value. Use low register or sp.');
         } else if (value1Type === OperandType.SpRegister && !isInmediateType(value2Type)) {
           return throwCompilerError('Invalid 2 value for indirect values. Only #Inm allowed with sp');
         }
-  
+
         const maxInmediate = value1Type === OperandType.SpRegister ? 1020 : 124;
         if (value2Type !== OperandType.LowRegister && !isInmediateType(value2Type)) {
           return throwCompilerError('Invalid 2 value for indirect values. Expected low register or #Inm');
@@ -769,8 +769,14 @@ function compileInstruction(line: string) {
       }
 
       // Operand two can only use low registers or #Inm
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1 = arg2.split(',')[0].replace('[', '').replace(']', '').trim();
+      let value2 = arg2.split(',')[1];
+      if (value2 === undefined) {
+        value2 = '#0';
+      } else {
+        value2 = value2.replace(']', '').trim();
+      }
+
       const value1Type = argToOperandType(value1);
       const value2Type = argToOperandType(value2);
 
@@ -802,8 +808,14 @@ function compileInstruction(line: string) {
       }
 
       // Operand two can only use low registers or #Inm
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1 = arg2.split(',')[0].replace('[', '').replace(']', '').trim();
+      let value2 = arg2.split(',')[1];
+      if (value2 === undefined) {
+        value2 = '#0';
+      } else {
+        value2 = value2.replace(']', '').trim();
+      }
+
       const value1Type = argToOperandType(value1);
       const value2Type = argToOperandType(value2);
 
@@ -836,8 +848,14 @@ function compileInstruction(line: string) {
       }
 
       // Operand two can only use low registers or #Inm
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1 = arg2.split(',')[0].replace('[', '').replace('[', '').trim();
+      let value2 = arg2.split(',')[1];
+      if (value2 === undefined) {
+        value2 = '#0';
+      } else {
+        value2 = value2.replace(']', '').trim();
+      }
+
       const value1Type = argToOperandType(value1);
       const value2Type = argToOperandType(value2);
 
@@ -905,8 +923,14 @@ function compileInstruction(line: string) {
       }
 
       // Operand two can only use low registers or #Inm
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1 = arg2.split(',')[0].replace('[', '').replace(']', '').trim();
+      let value2 = arg2.split(',')[1];
+      if (value2 === undefined) {
+        value2 = '#0';
+      } else {
+        value2 = value2.replace(']', '').trim();
+      }
+
       const value1Type = argToOperandType(value1);
       const value2Type = argToOperandType(value2);
 
@@ -938,8 +962,14 @@ function compileInstruction(line: string) {
       }
 
       // Operand two can only use low registers or #Inm
-      const value1 = arg2.split(',')[0].replace('[', '').trim();
-      const value2 = arg2.split(',')[1].replace(']', '').trim();
+      const value1 = arg2.split(',')[0].replace('[', '').replace(']', '').trim();
+      let value2 = arg2.split(',')[1];
+      if (value2 === undefined) {
+        value2 = '#0';
+      } else {
+        value2 = value2.replace(']', '').trim();
+      }
+
       const value1Type = argToOperandType(value1);
       const value2Type = argToOperandType(value2);
 
@@ -1139,7 +1169,7 @@ function compileAssembly(source: string): [Program, Memory] {
     }
   }
 
-  for (let i = 0; i < program.ins.length; i++) {
+  for (let i = 0; i < program.ins.length && program.error === undefined; i++) {
     const instruction = program.ins[i];
     if (instruction.operation === Operation.B || instruction.operation === Operation.BL) {
       if (labels[instruction.operands[0].value] === undefined) {

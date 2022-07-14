@@ -147,7 +147,10 @@ function defaultCPU(props: cpuProps = { memorySize: defaultMemorySize, stackSize
       this.memory.symbols = initialMemory.symbols;
 
       this.regs['r13'] = this.memSize * 4;
-      this.memory.data = this.memory.data.concat(new Array(this.stackSize).fill(0));
+      if (this.memSize > props.memorySize) {
+        const missingStack = props.stackSize - (this.memory.data.length - this.memSize);
+        this.memory.data = this.memory.data.concat(new Array(missingStack).fill(0));
+      }
     },
     execute(ins: Instruction) {
       assert(Operation.TOTAL_OPERATIONS === 30, 'Exhaustive handling of operations in execute');
