@@ -62,7 +62,7 @@
 {
     % Hoy en día la programación es cada vez una competencia más demandada, con la automatización de tareas siempre surge la necesidad de un software ya sea específico o no. \\
     El desarrollo a bajo nivel de software para una arquitectura específica es siempre de gran complejidad, tanto por el propio lenguaje ensamblador como por la necesidad de disponer del hardware
-    específico para probarlo. Debido a esto se recurre tanto a crosscompilers, para compilar código para una arquitectura que no es la del host, y emuladores como QEMU para ejecutar y depurar el programa.
+    específico para probarlo. Debido a esto se recurre a crosscompilers, para compilar código para una arquitectura que no es la del host, y emuladores como QEMU para ejecutar y depurar el programa.
     Existen entornos como \textbf{Xilinx Vitis} que provee de lo necesario para desarrollar y depurar programas integrando QEMU como herramienta de simulación.
     En muchos casos estos entornos resultan pesados de correr y difíciles de configurar. \\
 
@@ -72,7 +72,13 @@
     
     % Por ello se usa comunmente simuladores para el desarrollo sin necesidad de tener el hardware o incluso en la docencia de este tipo de lenguajes. Permitiendo estos escribir y probar código para una arquitectura que no es la del equipo. Sin embargo, estos simuladores pueden depender de librerías de terceros o programas por lo que su instalación y uso puede no ser siempre tan rápida. Además no todos son intuitivos y/o configurables. \\
 
-    Como solución a esto, y para el caso concreto de ARM Thumb, se decide desarrollar un \textbf{Simulador Web para ARM Thumb}. Al tratarse de una plataforma web simplificamos enormemente la instalación dado que bastaría con disponer de cualquier navegador y conexión a internet. Además esto hace que se pueda usar desde cualquier sistema operativo. \\
+    Como solución a esto, y para el caso concreto de ARM Thumb, se decide desarrollar un \textbf{Simulador Web para ARM Thumb}.
+    Al tratarse de una plataforma web se simplifica enormemente la instalación dado que bastaría con disponer de cualquier navegador y conexión a internet. Además esto hace que se pueda usar desde cualquier sistema operativo. \\
+    
+    Actualmente existen distintas alternativas para este propósito como son QtARMSim, ARMThumbSim (web) o OakSim (web).
+    Estos entornos ofrecen también la posibilidad de simular código ARM Thumb incluso en el caso de ARMThumbSim un display.
+    Estas plataformas sin embargo no permiten la modificación de los valores de la cpu como si hace QtARMSim. Así este proyecto busca integrar ambas partes, la facilidad de uso e interfaz de usuario de una plataforma web, con
+    el potencial de modificar aspectos de la cpu como permite QtARMSim. 
 
     Las tecnologías empleadas para esta plataforma son:
     \begin{enumerate}
@@ -90,7 +96,7 @@
     Los distintos modos de ejecución son usuario y sistema, FIQ (Fast Interrupt), supervisor, abort, IRQ (Interrupt) y undefined.
     El modo sistema es un modo usuario privilegiado para los sistemas operativos.
     En todos los modos hay disponibles 16 registros de uso general, uno de estado para los flags de la CPU (CPSR) y dependiendo del modo otro más de estado SPSR (Saved Program Status Register), accesible en todos los modos menos en usuario y sistema. \\
-
+    \clearpage
     En este proyecto se considera que la ejecución será siempre en modo usuario por lo que tenemos 16 registros de uso general y un registro de estado CPSR.
     Estos procesadores tienen dos modos de operación, ARM (32-bits word-aligned instructions) y Thumb (16-bit halfword-aligned instructions) que será el modo a emular.
     Como indica la documentación oficial de ARM  en modo Thumb están disponibles los registros inferiores (del 0 al 7) y los registros SP (Stack Pointer o r13), LR (Long Return o r14), PC (Program Counter o r15) y CPSR (sin acceso directo).
@@ -111,7 +117,7 @@
 
 \section{Objetivos y metodología de trabajo}
 {
-    El objetivo principal de este trabajo es crear una plataforma web que emule la arquitectura ARM Thumb, en la que los usuarios puedan escribir en ensamblador, compilar y probar el programa de forma interactiva.
+    El objetivo principal de este trabajo es desarrollar una plataforma web de software libre, inspirada en \href{https://creatorsim.github.io/creator/}{CREATOR} , que emule la arquitectura ARM Thumb, en la que los usuarios puedan escribir en ensamblador, compilar y probar el programa de forma interactiva.
     Pudiendo ver en todo momento el estado de la cpu, sus registros y flags de estado, así como la memoria y su contenido. \\
 
     Interpretar el código ensamblador en caso de que no contenga errores, de haberlos se le mostrará al usuario un mensaje de error así como la línea en la que se ha encontrado. 
@@ -127,12 +133,15 @@
     \end{enumerate}
 
     Como objetivo adicional se busca que la aplicación se lo mas intuitiva posible y permita modificar el estado de la cpu y la memoria que se está simulando. Con facilidades para modificar los valores de ambos. \\
+    \clearpage
 
     A la hora del desarrollo se dividió el proyecto en dos subproyectos, por un lado el emulador y por otro la plataforma web, que integrará siempre la última version del emulador.
-    Para ambos subproyectos se emplea un controlador de versiones, en este caso \textbf{git}, con sendos repositorios en github (\href{https://github.com/FreddyJS/armthumb-emul}{ARM Thumb Simulator} y \href{https://github.com/FreddyJS/wthumb}{Web ARM Thumb Simulator}). \\
+    Para ambos subproyectos se emplea un controlador de versiones, en este caso \textbf{git}, con sendos repositorios en github (\href{https://github.com/FreddyJS/armthumb-emul}{ARM Thumb Simulator} y \href{https://github.com/FreddyJS/wthumb}{Web ARM Thumb Simulator}).
+    Haciendo uso de \textbf{Github Workflows} para CI/CD. \\
 
     La distribución de trabajo fue también en dos fases, la fase inicial se centró en el desarrollo del emulador y crear un entorno de trabajo con tests unitarios.
-    Para crear el entorno de trabajo se utilizó \textbf{yarn} como gestor de paquetes y el paquete \textbf{jest} para crear una test suite para el emulador. También se creó una interfaz web mínima que integrase el emulador.
+    Para crear el entorno de trabajo se utilizó \textbf{yarn} como gestor de paquetes y el paquete \textbf{jest} para crear una test suite para el emulador.
+    También se creó una interfaz web mínima que integrase el emulador.
 
     La segunda fase se centró en correción de errores, tests e integración de la plataforma web con el emulador. 
     Por último se abordó el apartado visual empleando \textbf{react bootstrap}.
@@ -152,9 +161,9 @@
 
         Puede ser empleado por cualquier otra aplicación que use TypeScript. Está dividido en tres grandes partes:
         \begin{enumerate}
-            \item \textbf{Compilador}: Parte del código encargada de comprobar y parsear la entrada.
-            \item \textbf{CPU}: Parte encargada de la ejecución del programa.
-            \item \textbf{Tests Unitarios}: Conjunto de tests de la cpu.
+            \item \textbf{Compilador}: Comprobación de errores.
+            \item \textbf{CPU}: Contiene los registros, flags y la memoria.
+            \item \textbf{Tests Unitarios}: Conjunto de tests para cada operación de la cpu.
         \end{enumerate}
     
         % \begin{figure}[h]
@@ -170,7 +179,7 @@
         % \end{figure}
         \subsubsection{Compilador}
         Implementa la lógica necesaria para la comprobación de errores, interpretar las directivas de ensamblador
-        y crear para cada operación un objeto con la información necesaria para la cpu.
+        y crear para cada operación un objeto con la información necesaria para su ejecución.
         Gracias a TypeScript se definen los siguientes tipos:
         \begin{enumerate}
             \item \textbf{CompilerError}. Contiene la causa del error y la línea.
@@ -274,14 +283,6 @@
 
         La estética de la interfaz está inspirada en un simulador web que permite simular distintas arquitecturas
         así como crear una propia (\href{https://creatorsim.github.io/creator/}{CREATOR})
-
-        
-        % \begin{figure}[h]
-        %  \centering
-        %     \includegraphics[width=0.85\textwidth]{images/ui}
-        %     \caption{User Interface}
-        % \end{figure}
-        \clearpage
         
         \subsubsection{Code Editor}
         {
@@ -295,12 +296,6 @@
 
             Este componente muestra en todo momento el valor de \textbf{assembly} del estado de la aplicación y es el encargado de actualizarlo con la entrada del usuario.
             Una vez escrito el programa el usuario puede cargarlo en la CPU mediante el botón de \textbf{Load Program} en la parte superior de la interfaz. \\
-
-            % \begin{figure}[h]
-            %     \centering
-            %     \includegraphics[width=0.85\textwidth]{images/compiled}
-            %     \caption{Compiled Code}
-            % \end{figure}
 
             De haber algún error en el código se notificaría al usuario a través de un PopUp indicando la causa y la línea del error.
 
@@ -363,7 +358,7 @@
                 \caption{Change Register Value}
             \end{figure}
 
-            Además se comprueba en todo momento que la entrada del usuario sea un nº de 8 bits válido.
+            Además se comprueba en todo momento que la entrada del usuario sea un nº de 32 bits válido.
             Ya sea en formato hexadecimal o decimal, no se admiten números negativos, y se habilita el botón
             de guardar solo si la entrada es correcta. \\
 
@@ -432,8 +427,26 @@
         }
     }
 
-\section{Conclusiones}
+\section{Conclusiones y líneas futuras}
 {
+    Desde el inicio del proyecto se hizo presente la necesidad de implementar pruebas unitarias,
+    dada la necesidad de probar cada operación de la cpu. Además de eso la calidad de las pruebas es un factor
+    muy importante en todo proyecto ya que de ello depende que se encuentren todos los posibles errores. \\
+
+    Por otra parte el potencial que presenta la disponibilidad de una plataforma web con la capacidad
+    de simular código ensamblador de una arquitectura específica es muy elevado, desde para hacer
+    pequeñas pruebas de rutinas a por ejemplo el uso desde el hogar sin el equipo del laboratorio. \\
+
+    Una vez finalizado el trabajo se alcanza el objetivo principal, se obtiene una plataforma web
+    capaz de interpretar código ensamblador para ARM Thumb. Permitiendo a los usuarios
+    programar y simular la ejecución de la cpu. Con comprobación de errores y mensajes de errores lo más
+    específicos posibles para cada error. Además el desarrollo modular permite la integración del simulador
+    por parte de cualquier otra aplicación. \\
+
+    Cómo líneas futuras, esta aplicación ganaría aún mas potencial de ser capaz de generar un archivo
+    ejecutable para la arquitectura ARM. Mediante el desarrollo de un backend y el uso de un crosscompiler
+    se podría enviar el código a compilar y recibir el archivo ejecutable listo para cargar en el equipo donde se
+    va a ejecutar. Esto abre además la posibilidad de permitir registrar usuarios para guardar y cargar programas.    
 }
 
 \newpage
