@@ -4,7 +4,6 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 
-import { wordToDirective, wordToOperation } from 'emulator/types';
 import { directivesInfo, operationsInfo } from './info';
 
 type HelpProps = {
