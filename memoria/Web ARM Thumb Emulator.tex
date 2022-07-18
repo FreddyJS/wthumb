@@ -1,5 +1,11 @@
 \input{./head/uvigo_msthesis.tex}
 
+\usepackage{appendix}
+\renewcommand{\appendixname}{Anexos}
+\renewcommand{\appendixtocname}{Anexos}
+\renewcommand{\appendixpagename}{Anexos}
+
+\usepackage{pdfpages}
 \usepackage{graphicx}
 \usepackage{grffile}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
@@ -137,7 +143,8 @@
 
     A la hora del desarrollo se dividió el proyecto en dos subproyectos, por un lado el emulador y por otro la plataforma web, que integrará siempre la última version del emulador.
     Para ambos subproyectos se emplea un controlador de versiones, en este caso \textbf{git}, con sendos repositorios en github (\href{https://github.com/FreddyJS/armthumb-emul}{ARM Thumb Simulator} y \href{https://github.com/FreddyJS/wthumb}{Web ARM Thumb Simulator}).
-    Haciendo uso de \textbf{Github Workflows} para CI/CD. \\
+    Haciendo uso de \textbf{Github Workflows} para CI/CD, ejecutándose los tests en cada push al repositorio del simulador y para despliegue automático de la web
+    gracias a github pages. \\
 
     La distribución de trabajo fue también en dos fases, la fase inicial se centró en el desarrollo del emulador y crear un entorno de trabajo con tests unitarios.
     Para crear el entorno de trabajo se utilizó \textbf{yarn} como gestor de paquetes y el paquete \textbf{jest} para crear una test suite para el emulador.
@@ -193,7 +200,7 @@
 
         Se exporta una única función \textbf{compileAssembly} que recibe una string con el código ensamblador y retorna un objeto
         correspondiente al programa compilado y la memoria inicial que este necesita, el programa podrá tener un error
-        para su gestión posterior. 
+        para su gestión posterior. Consultar anexo para ver la lista de operaciones y directivas. 
 
         \subsubsection{ARM CPU}
         Para simular la cpu se define un objeto javascript con los siguientes campos: \\
@@ -327,11 +334,17 @@
 
         \subsubsection{Registros y flags}
         {
-            En ARM Thumb tenemos acceso a 16 registros, la mitad conocidos como \textbf{Low Registers} y la mitad superior \textbf{High Registers}.
-            Estos registros están siempre representados en pantalla junto con los flags de la cpu. 
+            Este componente se encarga de mostrar en todo momento el valor de cada registro de la cpu.
+            En este caso los 16 registros de uso general, además también muestra el estado de los flags.
 
-            Los registros inferiores son los del 0 al 7, mientras que los superiores son del 8 al 15.
-            Algunos de los registros superiores son registros con un propósito específico. Estos son:
+            Obtiene del estado de la aplicación, gracias a react-redux, el objeto cpu. Este estado se actualiza tras cada operación. De estos 16 registros cabe destacar
+            los registros especiales: 
+
+            % En ARM Thumb tenemos acceso a 16 registros, la mitad conocidos como \textbf{Low Registers} y la mitad superior \textbf{High Registers}.
+            % Estos registros están siempre representados en pantalla junto con los flags de la cpu. 
+
+            % Los registros inferiores son los del 0 al 7, mientras que los superiores son del 8 al 15.
+            % Algunos de los registros superiores son registros con un propósito específico. Estos son:
             \begin{enumerate}
                 \item \textbf{R13 (SP)}: Stack Pointer. Se actualiza automáticamente al hacer push o pop
                 \item \textbf{R14 (LR)}: Long Return Register. Se actualiza automáticamente al hacer un salto largo.
@@ -440,7 +453,7 @@
     Una vez finalizado el trabajo se alcanza el objetivo principal, se obtiene una plataforma web
     capaz de interpretar código ensamblador para ARM Thumb. Permitiendo a los usuarios
     programar y simular la ejecución de la cpu. Con comprobación de errores y mensajes de error lo más
-    específicos posibles para cada error. Además el desarrollo modular permite la integración del simulador
+    específicos posibles para cada error. Desplegada automáticamente en github pages: \href{https://freddyjs.github.io/wthumb/}{ARM Thumb Emulator}. Además el desarrollo modular permite la integración del simulador
     por parte de cualquier otra aplicación. \\
 
     Cómo líneas futuras, esta aplicación ganaría aún mas potencial de ser capaz de generar un archivo
@@ -457,14 +470,34 @@
             \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}, 
             \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes},
             \href{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}
-        \item \textbf{CREATOR}. \href{https://creatorsim.github.io/creator/}{https://creatorsim.github.io/creator/}, \href{https://github.com/dcamarmas/creator}{https://github.com/dcamarmas/creator}
-        \item \textbf{QtARMSim}. \href{http://lorca.act.uji.es/project/qtarmsim/}{http://lorca.act.uji.es/project/qtarmsim/}
-        \item \textbf{React Documentation}. \href{https://es.reactjs.org/}{https://es.reactjs.org/}
-        \item \textbf{React-Redux}. \href{https://react-redux.js.org/}{https://react-redux.js.org/}, \href{https://react-redux.js.org/using-react-redux/usage-with-typescript}{https://react-redux.js.org/using-react-redux/usage-with-typescript}
-        \item \textbf{React CodeMirror}. \href{https://uiwjs.github.io/react-codemirror/}{https://uiwjs.github.io/react-codemirror/}
-        \item \textbf{CodeMirror Documentation}. \href{https://codemirror.net/docs/}{https://codemirror.net/docs/}, \href{https://github.com/codemirror/legacy-modes}{https://github.com/codemirror/legacy-modes}
-        \item \textbf{React Bootstrap}. \href{https://react-bootstrap.github.io/}{https://react-bootstrap.github.io/}
+        \item \textbf{CREATOR}.
+            \href{https://creatorsim.github.io/creator/}{https://creatorsim.github.io/creator/},
+            \href{https://github.com/dcamarmas/creator}{https://github.com/dcamarmas/creator}
+        \item \textbf{QtARMSim}.
+            \href{http://lorca.act.uji.es/project/qtarmsim/}{http://lorca.act.uji.es/project/qtarmsim/}
+        \item \textbf{OakSim}.
+            \href{https://wunkolo.github.io/OakSim/}{https://wunkolo.github.io/OakSim/}
+        \item \textbf{React Documentation}.
+            \href{https://es.reactjs.org/}{https://es.reactjs.org/}
+        \item \textbf{React-Redux}.
+            \href{https://react-redux.js.org/}{https://react-redux.js.org/},
+            \href{https://react-redux.js.org/using-react-redux/usage-with-typescript}{https://react-redux.js.org/using-react-redux/usage-with-typescript}
+        \item \textbf{React CodeMirror}.
+            \href{https://uiwjs.github.io/react-codemirror/}{https://uiwjs.github.io/react-codemirror/}
+        \item \textbf{CodeMirror Documentation}.
+            \href{https://codemirror.net/docs/}{https://codemirror.net/docs/},
+            \href{https://github.com/codemirror/legacy-modes}{https://github.com/codemirror/legacy-modes}
+        \item \textbf{React Bootstrap}.
+            \href{https://react-bootstrap.github.io/}{https://react-bootstrap.github.io/}
     \end{enumerate}
 }
+
+\newpage
+
+\appendix
+\addappheadtotoc
+
+\includepdf[pages={1}, offset=0 3.5cm, pagecommand=\appendixpage\section{Subconjunto de intrucciones ARM Thumb}]{ARMThumbSubset.pdf}
+\includepdf[pages={2}, offset=0 7cm, pagecommand=\textbf{}]{ARMThumbSubset.pdf}
 
 \end{document}
