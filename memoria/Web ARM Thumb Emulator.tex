@@ -117,7 +117,7 @@
 
 \section{Objetivos y metodología de trabajo}
 {
-    El objetivo principal de este trabajo es desarrollar una plataforma web de software libre, inspirada en \href{https://creatorsim.github.io/creator/}{CREATOR} , que emule la arquitectura ARM Thumb, en la que los usuarios puedan escribir en ensamblador, compilar y probar el programa de forma interactiva.
+    El objetivo principal de este trabajo es desarrollar una plataforma web de software libre, inspirada en \href{https://creatorsim.github.io/creator/}{CREATOR} , que emule la arquitectura ARM Thumb. En la que los usuarios puedan escribir en ensamblador, compilar y probar el programa de forma interactiva.
     Pudiendo ver en todo momento el estado de la cpu, sus registros y flags de estado, así como la memoria y su contenido. \\
 
     Interpretar el código ensamblador en caso de que no contenga errores, de haberlos se le mostrará al usuario un mensaje de error así como la línea en la que se ha encontrado. 
@@ -258,7 +258,7 @@
             \caption{CPU Expected State Example}
         \end{figure}
         
-        Cada test comprueba una instrucción de forma independiente, salvo en algunos casos donde se prueban variantes de una sola en un mismo test (ldr, ldrb, ldrh) u otros
+        Cada test comprueba una instrucción de forma independiente, salvo en algunos casos donde se prueban variantes de una sola en un mismo test (ej: ldr, ldrb, ldrh) u otros
         donde es necesaria otra operación. Por ejemplo para realizar un salto condicional es necesario utilizar una operación previa, por ejemplo de comparación.
         Además de asegurar que el código en ensamblador es correcto mediante el crosscompiler el estado final
         de la cpu se comprobó manualmente mediante el simulador \textbf{QtARMSim}.        
@@ -439,23 +439,25 @@
 
     Una vez finalizado el trabajo se alcanza el objetivo principal, se obtiene una plataforma web
     capaz de interpretar código ensamblador para ARM Thumb. Permitiendo a los usuarios
-    programar y simular la ejecución de la cpu. Con comprobación de errores y mensajes de errores lo más
+    programar y simular la ejecución de la cpu. Con comprobación de errores y mensajes de error lo más
     específicos posibles para cada error. Además el desarrollo modular permite la integración del simulador
     por parte de cualquier otra aplicación. \\
 
     Cómo líneas futuras, esta aplicación ganaría aún mas potencial de ser capaz de generar un archivo
     ejecutable para la arquitectura ARM. Mediante el desarrollo de un backend y el uso de un crosscompiler
     se podría enviar el código a compilar y recibir el archivo ejecutable listo para cargar en el equipo donde se
-    va a ejecutar. Esto abre además la posibilidad de permitir registrar usuarios para guardar y cargar programas.    
+    va a ejecutar. Esto abre además la posibilidad de permitir registrar usuarios, guardar y cargar programas.  
 }
 
 \newpage
 \section{Referencias}
 {
     \begin{enumerate}
-        \item \textbf{ARM Developer Documentation}. \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}, 
-            \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}, \href{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en},
-        \item \textbf{CREATOR}. \href{https://creatorsim.github.io/creator/}{https://creatorsim.github.io/creator/}
+        \item \textbf{ARM Developer Documentation}.
+            \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Registers/The-Thumb-state-register-set}, 
+            \href{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes}{https://developer.arm.com/documentation/ddi0210/c/Programmer-s-Model/Operating-modes},
+            \href{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}{https://developer.arm.com/documentation/ddi0210/c/Introduction/Instruction-set-summary/Thumb-instruction-summary?lang=en}
+        \item \textbf{CREATOR}. \href{https://creatorsim.github.io/creator/}{https://creatorsim.github.io/creator/}, \href{https://github.com/dcamarmas/creator}{https://github.com/dcamarmas/creator}
         \item \textbf{QtARMSim}. \href{http://lorca.act.uji.es/project/qtarmsim/}{http://lorca.act.uji.es/project/qtarmsim/}
         \item \textbf{React Documentation}. \href{https://es.reactjs.org/}{https://es.reactjs.org/}
         \item \textbf{React-Redux}. \href{https://react-redux.js.org/}{https://react-redux.js.org/}, \href{https://react-redux.js.org/using-react-redux/usage-with-typescript}{https://react-redux.js.org/using-react-redux/usage-with-typescript}
