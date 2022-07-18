@@ -5,7 +5,7 @@ import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 
 import { wordToDirective, wordToOperation } from 'emulator/types';
-import { operationsInfo } from './info';
+import { directivesInfo, operationsInfo } from './info';
 
 type HelpProps = {
     show: boolean;
@@ -57,12 +57,12 @@ const Help = ({ show, onClose }: HelpProps) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.keys(wordToDirective).map((word) => {
+                                {Object.keys(directivesInfo).map((word) => {
                                     return (
                                         <tr key={word}>
                                             <td><b>{word}</b></td>
-                                            <td>This is an example</td>
-                                            <td>This is the description</td>
+                                            <td>{directivesInfo[word].example}</td>
+                                            <td>{directivesInfo[word].description}</td>
                                         </tr>
                                     );
                                 }

@@ -1,6 +1,4 @@
-import { Operation } from "emulator";
-
-const operationsInfo: { [key: string]: { example: string, description: string} } = {
+const operationsInfo: { [key: string]: { example: string, description: string } } = {
     mov: {
         example: 'mov Rd, #Inm8',
         description: 'Moves the value of the right operand into the destiny register (rD)'
@@ -121,6 +119,69 @@ const operationsInfo: { [key: string]: { example: string, description: string} }
         example: 'wfi',
         description: 'Stops the execution of the cpu'
     },
-  };
+};
 
-  export { operationsInfo };
+const directivesInfo: { [key: string]: { example: string, description: string } } = {
+    '.align': {
+        example: '.align 2',
+        description: 'Next data value aligned to 2^N'
+    },
+    '.balign': {
+        example: '.balign 4',
+        description: 'Next data value aligned to N'
+    },
+    '.ascii': {
+        example: '.ascii "Text"',
+        description: 'Stores the ascii values of the string in the memory'
+    },
+    '.asciz': {
+        example: '.asciz "Text"',
+        description: 'Same as .ascii but ends the string with a 0'
+    },
+    '.byte': {
+        example: '.byte 0xFF',
+        description: 'Stores a 8 bits value in the memory'
+    },
+    '.hword': {
+        example: '.hword 0xAAAA',
+        description: 'Stores a 16 bits value (half-word) in the memory'
+    },
+    '.word': {
+        example: '.word 0xFF0000FF',
+        description: 'Stores a 32 bits value (word) in the memory'
+    },
+    '.quad': {
+        example: '.quad 0xFF0000FF',
+        description: 'Stores a 64 bits value (double word) in the memory'
+    },
+    '.text': {
+        example: '.text',
+        description: 'Text section'
+    },
+    '.data': {
+        example: '.data',
+        description: 'Data section'
+    },
+    '.equ': {
+        example: '.equ seven, 7',
+        description: 'Assign the value to the symbol (seven)'
+    },
+    '.set': {
+        example: '.set seven, 7',
+        description: 'Same as .equ'
+    },
+    '.equiv': {
+        example: '.equiv seven, 7',
+        description: 'Same as .equ but throws error y the symbol already exists'
+    },
+    '.eqv': {
+        example: '.eqv seven, 7',
+        description: 'Same as .equiv'
+    },
+    '.space': {
+        example: '.space 4',
+        description: 'Reserve N bytes of memory to initialized to 0'
+    },
+};
+
+export { operationsInfo, directivesInfo };
