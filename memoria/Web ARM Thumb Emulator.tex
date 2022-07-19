@@ -27,7 +27,7 @@
 \vfill
 \begin{center}
   \huge 
-    {\huge Desarrollo de una ensamblador para ARM/THUMB}
+    {\huge Desarrollo de un ensamblador para ARM/THUMB}
 
 \vspace{24pt}
 \textcolor{gray}{\small{}}
@@ -86,14 +86,15 @@
     Estas plataformas sin embargo no permiten la modificación de los valores de la cpu como si hace QtARMSim. Así este proyecto busca integrar ambas partes, la facilidad de uso e interfaz de usuario de una plataforma web, con
     el potencial de modificar aspectos de la cpu como permite QtARMSim. 
 
-    Las tecnologías empleadas para esta plataforma son:
+    \subsection{Tecnologías}
+    Para el desarrollo de este proyecto se emplearon las siguientes tecnologías:
     \begin{enumerate}
-        \item \textbf{React}: JavaScript Framework
-        \item \textbf{NodeJS}: JavaScript Engine
-        \item \textbf{TypeScript}: React - TypeScript
-        \item \textbf{React-Redux}: States
-        \item \textbf{Docker}: Contenedores
-        \item \textbf{Git}: Controlador de versiones
+        \item \textbf{React}: JavaScript Framework para crear interfaces de usuario
+        \item \textbf{React-Redux}: States. Permite mantener un estado común para toda la aplicación
+        \item \textbf{TypeScript}: React con typescript. Módulo del simulador enteramente escrito en typescript.
+        \item \textbf{NodeJS}: JavaScript Engine, para ejecutar el servidor de desarrollo de React
+        \item \textbf{Docker}: Contenedores. Para despliegue ágil e instalación de dependencias
+        \item \textbf{Git}: Controlador de versiones. Repositorios en Github con CI/CD gracias a Github Workflows y Github Pages
     \end{enumerate}
 
     \subsection{Arquitectura}
@@ -101,7 +102,7 @@
     Un total de 31 registros de 32 bits para uso general y 6 registros de estado. Estos registros no están siempre accesibles al mismo tiempo, dependiendo del modo de ejecución del procesador están disponibles unos u otros.
     Los distintos modos de ejecución son usuario y sistema, FIQ (Fast Interrupt), supervisor, abort, IRQ (Interrupt) y undefined.
     El modo sistema es un modo usuario privilegiado para los sistemas operativos.
-    En todos los modos hay disponibles 16 registros de uso general, uno de estado para los flags de la CPU (CPSR) y dependiendo del modo otro más de estado SPSR (Saved Program Status Register), accesible en todos los modos menos en usuario y sistema. \\
+    En todos los modos hay disponibles 16 registros de uso general, uno de estado para los flags de la CPU (CPSR) y dependiendo del modo otro más de estado SPSR (Saved Program Status Register). \\
     \clearpage
     En este proyecto se considera que la ejecución será siempre en modo usuario por lo que tenemos 16 registros de uso general y un registro de estado CPSR.
     Estos procesadores tienen dos modos de operación, ARM (32-bits word-aligned instructions) y Thumb (16-bit halfword-aligned instructions) que será el modo a emular.
@@ -473,10 +474,13 @@
         \item \textbf{CREATOR}.
             \href{https://creatorsim.github.io/creator/}{https://creatorsim.github.io/creator/},
             \href{https://github.com/dcamarmas/creator}{https://github.com/dcamarmas/creator}
+        \item \textbf{Xilinx Vitis}.
+            \href{https://www.xilinx.com/products/design-tools/vitis/vitis-platform.html}{https://www.xilinx.com/products/design-tools/vitis/vitis-platform.html}
         \item \textbf{QtARMSim}.
             \href{http://lorca.act.uji.es/project/qtarmsim/}{http://lorca.act.uji.es/project/qtarmsim/}
         \item \textbf{OakSim}.
-            \href{https://wunkolo.github.io/OakSim/}{https://wunkolo.github.io/OakSim/}
+            \href{https://wunkolo.github.io/OakSim/}{https://wunkolo.github.io/OakSim/},
+            \href{https://github.com/Wunkolo/OakSim}{https://github.com/Wunkolo/OakSim}
         \item \textbf{React Documentation}.
             \href{https://es.reactjs.org/}{https://es.reactjs.org/}
         \item \textbf{React-Redux}.
