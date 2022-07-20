@@ -68,11 +68,11 @@
 {
     % Hoy en día la programación es cada vez una competencia más demandada, con la automatización de tareas siempre surge la necesidad de un software ya sea específico o no. \\
     El desarrollo a bajo nivel de software para una arquitectura específica es siempre de gran complejidad, tanto por el propio lenguaje ensamblador como por la necesidad de disponer del hardware
-    específico para probarlo. Debido a esto se recurre a crosscompilers, para compilar código para una arquitectura que no es la del host, y emuladores como QEMU para ejecutar y depurar el programa.
+    específico para probarlo. Debido a esto se recurre a crosscompilers, para compilar/ensamblar código para una arquitectura que no es la del host, y emuladores como QEMU para ejecutar y depurar el programa.
     Existen entornos como \textbf{Xilinx Vitis} que provee de lo necesario para desarrollar y depurar programas integrando QEMU como herramienta de simulación.
     En muchos casos estos entornos resultan pesados de correr y difíciles de configurar. \\
 
-    Para la arquitectura ARM existe \textbf{QtARMSim}, un simulador para ARM programado en python, hace uso de un crosscompiler para compilar el código y después emular la ejecución del mismo.
+    Para la arquitectura ARM existe \textbf{QtARMSim}, un simulador para ARM programado en python, hace uso de un crosscompiler para ensamblar el código y después emular la ejecución del mismo.
     Estos entornos tienen en muchos casos dependencias necesarias para su funcionamiento y en el caso de Xilinx Vitis ocupan una gran cantidad de almacenamiento. \\
     % Debido a esto cada vez obtienen mas interés los estudios relacionados con cualquier tipo de desarrollo software (WEB, Android, etc). Entre los distintos lenguajes de programación están los conocidos como \textbf{de bajo nivel o ensamblador}. En estos el programador tiene pleno control sobre los registros de la cpu, habiendo uno específico para cada arquitectura y soportado solo por esta. \\
     
@@ -124,7 +124,8 @@
 
 \section{Objetivos y metodología de trabajo}
 {
-    El objetivo principal de este trabajo es desarrollar una plataforma web de software libre, inspirada en \href{https://creatorsim.github.io/creator/}{CREATOR} , que emule la arquitectura ARM Thumb. En la que los usuarios puedan escribir en ensamblador, compilar y probar el programa de forma interactiva.
+    El objetivo principal de este trabajo es desarrollar una plataforma web de software libre, inspirada en \href{https://creatorsim.github.io/creator/}{CREATOR} , que emule la arquitectura ARM Thumb.
+    En la que los usuarios puedan escribir en ensamblador, ensamblar y probar el programa de forma interactiva.
     Pudiendo ver en todo momento el estado de la cpu, sus registros y flags de estado, así como la memoria y su contenido. \\
 
     Interpretar el código ensamblador en caso de que no contenga errores, de haberlos se le mostrará al usuario un mensaje de error así como la línea en la que se ha encontrado. 
@@ -169,7 +170,7 @@
 
         Puede ser empleado por cualquier otra aplicación que use TypeScript. Está dividido en tres grandes partes:
         \begin{enumerate}
-            \item \textbf{Compilador}: Comprobación de errores.
+            \item \textbf{Ensamblador}: Comprobación de errores.
             \item \textbf{CPU}: Contiene los registros, flags y la memoria.
             \item \textbf{Tests Unitarios}: Conjunto de tests para cada operación de la cpu.
         \end{enumerate}
@@ -185,7 +186,7 @@
         %     \includegraphics[width=0.85\textwidth]{images/tests2}
         %     \caption{Finished Test Suite}
         % \end{figure}
-        \subsubsection{Compilador}
+        \subsubsection{Ensamblador}
         Implementa la lógica necesaria para la comprobación de errores, interpretar las directivas de ensamblador
         y crear para cada operación un objeto con la información necesaria para su ejecución.
         Gracias a TypeScript se definen los siguientes tipos:
@@ -193,14 +194,14 @@
             \item \textbf{CompilerError}. Contiene la causa del error y la línea.
             \item \textbf{Operand}. Argumento de una operación, consta de tipo (LowRegister, DecInmediate, ...) y valor.
             \item \textbf{Instruction}. Operación a ejecutar. Campos: operation, operands, break y label.
-            \item \textbf{Program}. Programa compilado. Consta de un array de instrucciones y un posible error.
+            \item \textbf{Program}. Programa ensamblado. Consta de un array de instrucciones y un posible error.
         \end{enumerate}
 
         Los datos iniciales del programa especificados mediante las directivas de ensamblador (.byte, .asciz, ...)
         son almcenados en un array de números enteros para después cargarse en la cpu junto con el programa.
 
         Se exporta una única función \textbf{compileAssembly} que recibe una string con el código ensamblador y retorna un objeto
-        correspondiente al programa compilado y la memoria inicial que este necesita, el programa podrá tener un error
+        correspondiente al programa ensamblado y la memoria inicial que este necesita, el programa podrá tener un error
         para su gestión posterior. Consultar anexo para ver la lista de operaciones y directivas. 
 
         \subsubsection{ARM CPU}
@@ -225,9 +226,9 @@
         Se define un tipo de TypeScript \textbf{Instruction}, este objeto tiene el tipo de operación a ejecutar
         (MOV, ADD, SUB, etc), los argumentos de la operación y una posible label. El programa cargado en la CPU se define como un array de estas instrucciones. \\
 
-        \textbf{Error del compilador (error)} \\
+        \textbf{Error del ensamblador (error)} \\
         Se define el tipo \textbf{CompilerError} que contiene la causa del error y la línea en la que se ha encontrado.
-        Previamente a cargar el código compilado se comprueba si el compilador se ha detenido debido a un error. \\
+        Previamente a cargar el código ensamblado se comprueba si el proceso se ha detenido debido a un error. \\
 
         Además de estos campos cuenta con los métodos:
         \begin{enumerate}
@@ -236,8 +237,8 @@
             \item \textbf{execute(ins: Instruction)}: Empleado por los dos anteriores, recibe la instrucción a ejecutar y realiza la operación en cuestión.
                 Implementa la lógica de cada operación del subconjunto de operaciones de ARM Thumb.
                 Activando o desactivando flags según corresponda y modificando los registros o memoria.
-            \item \textbf{loadAssembly(assembly: string)}: Llama a \textbf{compileAssembly} para compilar y posteriormente cargar el código ensamblador, en caso de que no haya errores.
-                Inicializa la memoria con los valores de la memoria inicial que devuelve el compilador. En caso de haber algún error lo almacena en el correspondiente campo de la cpu
+            \item \textbf{loadAssembly(assembly: string)}: Llama a \textbf{compileAssembly} para ensamblar y posteriormente cargar el código ensamblador, en caso de que no haya errores.
+                Inicializa la memoria con los valores de la memoria inicial que devuelve el ensamblador. En caso de haber algún error lo almacena en el correspondiente campo de la cpu
                 y retorna sin cargar el programa ni la memoria.
         \end{enumerate}
 
@@ -245,8 +246,8 @@
         Durante todo el desarrollo del simulador se tuvo presente la necesidad de realizar tests
         para comprobar el correcto funcionamiento. Por ello se mantuvo en todo momento un conjunto de tests para cada operación.
         
-        Cada test tiene un archivo con el código ensamblador a compilar y ejecutar, como primer paso se compila el código
-        mediante un crosscompiler para ARM. De no haber error se compila mediante el simulador, se comprueba que no hayan ocurrido errores y por
+        Cada test tiene un archivo con el código ARM Thumb a ensamblar y ejecutar, como primer paso se ensambla el código
+        mediante un crosscompiler para ARM. De no haber error se hace mediante el simulador, se comprueba que no hayan ocurrido errores y por
         último se ejecuta.
 
         \begin{figure}[h]
@@ -452,15 +453,17 @@
     pequeñas pruebas de rutinas a por ejemplo el uso desde el hogar sin el equipo del laboratorio. \\
 
     Una vez finalizado el trabajo se alcanza el objetivo principal, se obtiene una plataforma web
-    capaz de interpretar código ensamblador para ARM Thumb. Permitiendo a los usuarios
+    capaz de interpretar código ensamblador para ARM Thumb, centrada en la simulación del mismo ya que no se obtiene
+    el código objeto en ARM Thumb. Permitiendo a los usuarios
     programar y simular la ejecución de la cpu. Con comprobación de errores y mensajes de error lo más
     específicos posibles para cada error. Desplegada automáticamente en github pages: \href{https://freddyjs.github.io/wthumb/}{ARM Thumb Emulator}. Además el desarrollo modular permite la integración del simulador
     por parte de cualquier otra aplicación. \\
 
     Cómo líneas futuras, esta aplicación ganaría aún mas potencial de ser capaz de generar un archivo
-    ejecutable para la arquitectura ARM. Mediante el desarrollo de un backend y el uso de un crosscompiler
-    se podría enviar el código a compilar y recibir el archivo ejecutable listo para cargar en el equipo donde se
-    va a ejecutar. Esto abre además la posibilidad de permitir registrar usuarios, guardar y cargar programas.  
+    ejecutable para la arquitectura ARM, permitiendo también obtener el código objeto de cada operación. Mediante el desarrollo de un backend y el uso de un crosscompiler
+    se podría enviar el código a ensamblar y recibir el archivo ejecutable listo para cargar en el equipo donde se
+    va a ejecutar y con herramientas como \textbf{objdump} obtener la información necesaria de dicho archivo (secciones de datos, código objeto de cada operación, ...).
+    Esto abre además la posibilidad de permitir registrar usuarios, guardar y cargar programas.  
 }
 
 \newpage
