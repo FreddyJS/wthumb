@@ -1,0 +1,152 @@
+{
+  "regs": {
+    "r0": 0,
+    "r1": 4,
+    "r2": 4,
+    "r3": 1,
+    "r4": 0,
+    "r5": 4,
+    "r6": 0,
+    "r7": 0,
+    "r8": 4,
+    "r9": 4,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 4,
+    "r14": 0,
+    "r15": 16
+  },
+  "z": false,
+  "n": false,
+  "c": false,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": []
+  },
+  "memSize": 0,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 3,
+          "value": "#0x04"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r3"
+        },
+        {
+          "type": 0,
+          "value": "r1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 1,
+          "value": "r8"
+        },
+        {
+          "type": 0,
+          "value": "r2"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 1,
+          "value": "r8"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 1,
+          "value": "r9"
+        },
+        {
+          "type": 1,
+          "value": "r8"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 2,
+          "value": "r13"
+        },
+        {
+          "type": 1,
+          "value": "r8"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r5"
+        },
+        {
+          "type": 2,
+          "value": "r13"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

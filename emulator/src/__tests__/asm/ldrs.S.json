@@ -1,0 +1,156 @@
+{
+  "regs": {
+    "r0": 0,
+    "r1": 1,
+    "r2": 4,
+    "r3": 65535,
+    "r4": 4294967295,
+    "r5": 32767,
+    "r6": 4294967295,
+    "r7": 127,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 12,
+    "r14": 0,
+    "r15": 16
+  },
+  "z": false,
+  "n": false,
+  "c": false,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": [
+      32767,
+      4294967295,
+      2
+    ]
+  },
+  "memSize": 3,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#0"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#4"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 18,
+      "name": "ldrh",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r3"
+        },
+        {
+          "type": 5,
+          "value": "[r2, r0]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 20,
+      "name": "ldrsh",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r4"
+        },
+        {
+          "type": 5,
+          "value": "[r2, r0]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 20,
+      "name": "ldrsh",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r5"
+        },
+        {
+          "type": 5,
+          "value": "[r0, r0]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 21,
+      "name": "ldrsb",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r6"
+        },
+        {
+          "type": 5,
+          "value": "[r0, r0]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 21,
+      "name": "ldrsb",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r7"
+        },
+        {
+          "type": 5,
+          "value": "[r0, r1]"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

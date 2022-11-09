@@ -1,0 +1,164 @@
+{
+  "regs": {
+    "r0": 220,
+    "r1": 10,
+    "r2": 0,
+    "r3": 0,
+    "r4": 0,
+    "r5": 0,
+    "r6": 0,
+    "r7": 0,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 4294967284,
+    "r14": 0,
+    "r15": 16
+  },
+  "z": false,
+  "n": false,
+  "c": true,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": []
+  },
+  "memSize": 0,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 1,
+      "name": "add",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#255"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 1,
+      "name": "add",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#10"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 2,
+      "name": "sub",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#5"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 2,
+      "name": "sub",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 2,
+      "name": "sub",
+      "operands": [
+        {
+          "type": 2,
+          "value": "r13"
+        },
+        {
+          "type": 4,
+          "value": "#4"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 2,
+      "name": "sub",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#10"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 2,
+      "name": "sub",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 2,
+      "name": "sub",
+      "operands": [
+        {
+          "type": 2,
+          "value": "r13"
+        },
+        {
+          "type": 2,
+          "value": "r13"
+        },
+        {
+          "type": 4,
+          "value": "#8"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

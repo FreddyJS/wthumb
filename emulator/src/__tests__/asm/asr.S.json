@@ -1,0 +1,168 @@
+{
+  "regs": {
+    "r0": 0,
+    "r1": 0,
+    "r2": 1,
+    "r3": 0,
+    "r4": 0,
+    "r5": 0,
+    "r6": 0,
+    "r7": 0,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 0,
+    "r14": 0,
+    "r15": 16
+  },
+  "z": true,
+  "n": false,
+  "c": false,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": []
+  },
+  "memSize": 0,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 15,
+      "name": "asr",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#3"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 15,
+      "name": "asr",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#3"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#2"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 15,
+      "name": "asr",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r3"
+        },
+        {
+          "type": 4,
+          "value": "#255"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 15,
+      "name": "asr",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r3"
+        },
+        {
+          "type": 0,
+          "value": "r3"
+        },
+        {
+          "type": 4,
+          "value": "#31"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

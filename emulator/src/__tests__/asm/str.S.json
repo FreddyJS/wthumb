@@ -1,0 +1,126 @@
+{
+  "regs": {
+    "r0": 0,
+    "r1": 4,
+    "r2": 255,
+    "r3": 0,
+    "r4": 0,
+    "r5": 0,
+    "r6": 0,
+    "r7": 0,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 12,
+    "r14": 0,
+    "r15": 12
+  },
+  "z": false,
+  "n": false,
+  "c": false,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": [
+      4,
+      255,
+      16711935
+    ]
+  },
+  "memSize": 3,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#4"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#255"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 22,
+      "name": "str",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 5,
+          "value": "[r0, #0]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 22,
+      "name": "str",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 5,
+          "value": "[r0, #4]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 23,
+      "name": "strh",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 5,
+          "value": "[r0, #8]"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 24,
+      "name": "strb",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 5,
+          "value": "[r0, #10]"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

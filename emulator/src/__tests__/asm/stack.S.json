@@ -1,0 +1,107 @@
+{
+  "regs": {
+    "r0": 255,
+    "r1": 1,
+    "r2": 256,
+    "r3": 256,
+    "r4": 1,
+    "r5": 255,
+    "r6": 0,
+    "r7": 0,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 0,
+    "r14": 0,
+    "r15": 10
+  },
+  "z": false,
+  "n": false,
+  "c": false,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": [
+      255,
+      1,
+      256
+    ]
+  },
+  "memSize": 0,
+  "stackSize": 3,
+  "program": [
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#255"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 1,
+      "name": "add",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 25,
+      "name": "push",
+      "operands": [
+        {
+          "type": 6,
+          "value": "{r0, r1, r2}"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 26,
+      "name": "pop",
+      "operands": [
+        {
+          "type": 6,
+          "value": "{r3, r4, r5}"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

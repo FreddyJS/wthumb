@@ -1,0 +1,134 @@
+{
+  "regs": {
+    "r0": 2,
+    "r1": 24,
+    "r2": 2147483648,
+    "r3": 0,
+    "r4": 0,
+    "r5": 0,
+    "r6": 0,
+    "r7": 0,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 0,
+    "r14": 0,
+    "r15": 12
+  },
+  "z": false,
+  "n": true,
+  "c": true,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": []
+  },
+  "memSize": 0,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 13,
+      "name": "lsl",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#3"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 13,
+      "name": "lsl",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#3"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#255"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 13,
+      "name": "lsl",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#31"
+        }
+      ],
+      "break": false
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+{
+  "regs": {
+    "r0": 10,
+    "r1": 1,
+    "r2": 255,
+    "r3": 0,
+    "r4": 0,
+    "r5": 0,
+    "r6": 0,
+    "r7": 0,
+    "r8": 0,
+    "r9": 0,
+    "r10": 0,
+    "r11": 0,
+    "r12": 0,
+    "r13": 0,
+    "r14": 0,
+    "r15": 40
+  },
+  "z": false,
+  "n": false,
+  "c": false,
+  "v": false,
+  "memory": {
+    "symbols": {},
+    "data": []
+  },
+  "memSize": 0,
+  "stackSize": 0,
+  "program": [
+    {
+      "operation": 27,
+      "name": "b",
+      "operands": [
+        {
+          "type": 7,
+          "value": "main"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#0"
+        }
+      ],
+      "break": false,
+      "label": "never"
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#0"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#0"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "b",
+      "operands": [
+        {
+          "type": 7,
+          "value": "end"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 1,
+      "name": "add",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false,
+      "label": "main"
+    },
+    {
+      "operation": 5,
+      "name": "cmp",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#10"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "beq",
+      "operands": [
+        {
+          "type": 7,
+          "value": "never"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "blt",
+      "operands": [
+        {
+          "type": 7,
+          "value": "lower"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "b",
+      "operands": [
+        {
+          "type": 7,
+          "value": "never"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#10"
+        }
+      ],
+      "break": false,
+      "label": "lower"
+    },
+    {
+      "operation": 5,
+      "name": "cmp",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 4,
+          "value": "#10"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "beq",
+      "operands": [
+        {
+          "type": 7,
+          "value": "equals"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "b",
+      "operands": [
+        {
+          "type": 7,
+          "value": "never"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#1"
+        }
+      ],
+      "break": false,
+      "label": "equals"
+    },
+    {
+      "operation": 5,
+      "name": "cmp",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r1"
+        },
+        {
+          "type": 4,
+          "value": "#0"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "bgt",
+      "operands": [
+        {
+          "type": 7,
+          "value": "greater"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 27,
+      "name": "b",
+      "operands": [
+        {
+          "type": 7,
+          "value": "never"
+        }
+      ],
+      "break": false
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r2"
+        },
+        {
+          "type": 4,
+          "value": "#255"
+        }
+      ],
+      "break": false,
+      "label": "greater"
+    },
+    {
+      "operation": 0,
+      "name": "mov",
+      "operands": [
+        {
+          "type": 0,
+          "value": "r0"
+        },
+        {
+          "type": 0,
+          "value": "r0"
+        }
+      ],
+      "break": false,
+      "label": "end"
+    }
+  ]
+}
