@@ -1,4 +1,5 @@
-# wthumb
+# Web ARM Thumb Emulator
+[![Emulator Tests](https://github.com/FreddyJS/wthumb/actions/workflows/tests.yml/badge.svg)](https://github.com/FreddyJS/wthumb/actions/workflows/tests.yml) [![Github Pages](https://github.com/FreddyJS/wthumb/actions/workflows/publish.yml/badge.svg)](https://github.com/FreddyJS/wthumb/actions/workflows/publish.yml)  
 [Web Emulator for ARM Thumb Assembly](https://freddyjs.github.io/wthumb/). Code editor for arm thumb with syntax highlighting and emulation of code.
 
 ## ARM Thumb Instructions References
